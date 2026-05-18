@@ -1,0 +1,263 @@
+---
+import NvimLayout from "../../layouts/NvimLayout.astro";
+---
+
+<NvimLayout activeFile="/games/snake" fileType="javascript" mode="NORMAL" title="Wish | Snake">
+  <article class="buffer-prose" style="max-width: 720px;">
+    <h1>snake.js</h1>
+    <p class="text-comment">
+      The classic. Steer with <code>h</code>/<code>j</code>/<code>k</code>/<code>l</code>
+      (or arrow keys). Eat the apple, don't bite yourself. <code>p</code> pauses, <code>r</code>
+      restarts, <code>q</code> / <code>Esc</code> exits.
+    </p>
+
+    <div class="mt-6 flex flex-col sm:flex-row gap-6 items-start">
+      <div class="relative shrink-0">
+        <canvas
+          id="snake-canvas"
+          width="400"
+          height="400"
+          class="bg-bg-dark border border-border rounded"
+          style="image-rendering: pixelated;"
+        ></canvas>
+        <div
+          id="snake-overlay"
+          class="absolute inset-0 hidden items-center justify-center bg-black/65 text-center rounded"
+        >
+          <div>
+            <div id="snake-overlay-title" class="text-red font-bold text-lg mb-2">GAME OVER</div>
+            <div class="text-fg text-xs">press <span class="text-yellow">r</span> to restart</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="font-mono text-sm space-y-3 min-w-[160px]">
+        <div>
+          <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Score</div>
+          <div id="snake-score" class="text-blue text-2xl tabular-nums">0</div>
+        </div>
+        <div>
+          <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Best</div>
+          <div id="snake-best" class="text-yellow text-xl tabular-nums">0</div>
+        </div>
+        <div>
+          <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Speed</div>
+          <div id="snake-speed" class="text-purple text-xl tabular-nums">1</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 text-comment text-xs grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-1 font-mono">
+      <div><span class="text-yellow">h / ←</span> left</div>
+      <div><span class="text-yellow">l / →</span> right</div>
+      <div><span class="text-yellow">k / ↑</span> up</div>
+      <div><span class="text-yellow">j / ↓</span> down</div>
+      <div><span class="text-yellow">p</span> pause</div>
+      <div><span class="text-yellow">r</span> restart</div>
+      <div><span class="text-yellow">q / Esc</span> back to home</div>
+    </div>
+  </article>
+</NvimLayout>
+
+<script>
+  // Suppress the layout's global vim keybindings so hjkl steers the snake
+  // instead of navigating.
+  (window as any).__vimCmdMode = true;
+
+  const CELL = 20;
+  const COLS = 20;
+  const ROWS = 20;
+  const STORAGE_KEY = "snake-best";
+
+  const canvas = document.getElementById("snake-canvas") as HTMLCanvasElement | null;
+  const ctx = canvas?.getContext("2d") ?? null;
+  const scoreEl = document.getElementById("snake-score");
+  const bestEl  = document.getElementById("snake-best");
+  const speedEl = document.getElementById("snake-speed");
+  const overlay = document.getElementById("snake-overlay");
+  const overlayTitle = document.getElementById("snake-overlay-title");
+
+  function cssVar(name: string, fallback: string) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
+
+  interface Point { x: number; y: number; }
+
+  let snake: Point[] = [];
+  let dir: Point = { x: 1, y: 0 };
+  let queuedDir: Point | null = null;
+  let food: Point = { x: 0, y: 0 };
+  let score = 0;
+  let best = 0;
+  let tickMs = 130;
+  let lastTick = 0;
+  let paused = false;
+  let gameOver = false;
+  let rafId: number | null = null;
+
+  try { best = Number(localStorage.getItem(STORAGE_KEY) ?? 0) || 0; } catch { best = 0; }
+
+  function reset() {
+    snake = [
+      { x: 9, y: 10 },
+      { x: 8, y: 10 },
+      { x: 7, y: 10 },
+    ];
+    dir = { x: 1, y: 0 };
+    queuedDir = null;
+    score = 0;
+    tickMs = 130;
+    paused = false;
+    gameOver = false;
+    placeFood();
+    updateHud();
+    if (overlay) {
+      overlay.classList.add("hidden");
+      overlay.classList.remove("flex");
+    }
+  }
+
+  function placeFood() {
+    while (true) {
+      const p = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
+      if (!snake.some((s) => s.x === p.x && s.y === p.y)) {
+        food = p;
+        return;
+      }
+    }
+  }
+
+  function updateHud() {
+    if (scoreEl) scoreEl.textContent = String(score);
+    if (bestEl)  bestEl.textContent  = String(best);
+    if (speedEl) speedEl.textContent = String(Math.max(1, Math.round((130 - tickMs) / 10) + 1));
+  }
+
+  function setDir(dx: number, dy: number) {
+    // Prevent 180° reversals — compare against the *current* dir, not queued.
+    if (snake.length > 1 && dir.x === -dx && dir.y === -dy) return;
+    queuedDir = { x: dx, y: dy };
+  }
+
+  function step() {
+    if (queuedDir) { dir = queuedDir; queuedDir = null; }
+    const head = snake[0];
+    const next = { x: head.x + dir.x, y: head.y + dir.y };
+
+    if (next.x < 0 || next.x >= COLS || next.y < 0 || next.y >= ROWS) return endGame();
+    if (snake.some((s) => s.x === next.x && s.y === next.y)) return endGame();
+
+    snake.unshift(next);
+    if (next.x === food.x && next.y === food.y) {
+      score++;
+      if (score > best) {
+        best = score;
+        try { localStorage.setItem(STORAGE_KEY, String(best)); } catch {}
+      }
+      tickMs = Math.max(60, tickMs - 3);
+      placeFood();
+      updateHud();
+    } else {
+      snake.pop();
+    }
+  }
+
+  function endGame() {
+    gameOver = true;
+    if (overlay && overlayTitle) {
+      overlayTitle.textContent = "GAME OVER";
+      overlay.classList.remove("hidden");
+      overlay.classList.add("flex");
+    }
+  }
+
+  function togglePause() {
+    if (gameOver) return;
+    paused = !paused;
+    if (overlay && overlayTitle) {
+      if (paused) {
+        overlayTitle.textContent = "PAUSED";
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+      } else {
+        overlay.classList.add("hidden");
+        overlay.classList.remove("flex");
+      }
+    }
+  }
+
+  function draw() {
+    if (!ctx || !canvas) return;
+    ctx.fillStyle = cssVar("--tn-bg-dark", "#1a1b26");
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // grid
+    ctx.strokeStyle = cssVar("--tn-bg-highlight", "#292e42");
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= COLS; x++) {
+      ctx.beginPath();
+      ctx.moveTo(x * CELL + 0.5, 0);
+      ctx.lineTo(x * CELL + 0.5, ROWS * CELL);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= ROWS; y++) {
+      ctx.beginPath();
+      ctx.moveTo(0, y * CELL + 0.5);
+      ctx.lineTo(COLS * CELL, y * CELL + 0.5);
+      ctx.stroke();
+    }
+
+    // food
+    const foodColor = cssVar("--tn-red", "#f7768e");
+    ctx.fillStyle = foodColor;
+    ctx.beginPath();
+    ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL / 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // snake
+    const head = cssVar("--tn-green", "#9ece6a");
+    const body = cssVar("--tn-cyan",  "#7dcfff");
+    snake.forEach((s, i) => {
+      ctx.fillStyle = i === 0 ? head : body;
+      ctx.fillRect(s.x * CELL + 2, s.y * CELL + 2, CELL - 4, CELL - 4);
+    });
+  }
+
+  function loop(time = 0) {
+    if (!paused && !gameOver) {
+      if (time - lastTick > tickMs) {
+        step();
+        lastTick = time;
+      }
+    }
+    draw();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function handleKey(e: KeyboardEvent) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (k === "r" || k === "R") { e.preventDefault(); reset(); return; }
+    if (k === "p" || k === "P") { e.preventDefault(); togglePause(); return; }
+    if (k === "q" || k === "Q" || k === "Escape") {
+      e.preventDefault();
+      const fn = (window as any).__navigateTo;
+      if (typeof fn === "function") fn("/"); else location.href = "/";
+      return;
+    }
+    if (gameOver || paused) return;
+
+    if (k === "h" || k === "ArrowLeft")  { e.preventDefault(); setDir(-1, 0); return; }
+    if (k === "l" || k === "ArrowRight") { e.preventDefault(); setDir( 1, 0); return; }
+    if (k === "k" || k === "ArrowUp")    { e.preventDefault(); setDir( 0,-1); return; }
+    if (k === "j" || k === "ArrowDown")  { e.preventDefault(); setDir( 0, 1); return; }
+  }
+
+  window.addEventListener("keydown", handleKey, { capture: true });
+
+  reset();
+  if (rafId) cancelAnimationFrame(rafId);
+  lastTick = 0;
+  rafId = requestAnimationFrame(loop);
+</script>

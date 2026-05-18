@@ -1,0 +1,432 @@
+---
+import NvimLayout from "../../layouts/NvimLayout.astro";
+---
+
+<NvimLayout activeFile="/games/tetris" fileType="javascript" mode="NORMAL" title="Wish | Tetris">
+  <article class="buffer-prose" style="max-width: 720px;">
+    <h1>tetris.js</h1>
+    <p class="text-comment">
+      A tiny Tetris in vanilla JS. Move with <code>h</code>/<code>l</code> (or arrows), rotate with
+      <code>k</code> / <code>↑</code>, soft drop with <code>j</code> / <code>↓</code>, hard drop with
+      space. <code>p</code> pauses, <code>r</code> restarts, <code>q</code> / <code>Esc</code> exits.
+    </p>
+
+    <div class="mt-6 flex flex-col sm:flex-row gap-6 items-start">
+      <div class="relative shrink-0">
+        <canvas
+          id="tetris-canvas"
+          width="200"
+          height="400"
+          class="bg-bg-dark border border-border rounded"
+          style="image-rendering: pixelated;"
+          tabindex="0"
+        ></canvas>
+        <div
+          id="tetris-overlay"
+          class="absolute inset-0 hidden items-center justify-center bg-black/65 text-center rounded"
+        >
+          <div>
+            <div id="tetris-overlay-title" class="text-red font-bold text-lg mb-2">GAME OVER</div>
+            <div class="text-fg text-xs">press <span class="text-yellow">r</span> to restart</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="font-mono text-sm space-y-3 min-w-[160px]">
+        <div>
+          <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Score</div>
+          <div id="tetris-score" class="text-blue text-2xl tabular-nums">0</div>
+        </div>
+        <div>
+          <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Lines</div>
+          <div id="tetris-lines" class="text-yellow text-xl tabular-nums">0</div>
+        </div>
+        <div>
+          <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Level</div>
+          <div id="tetris-level" class="text-purple text-xl tabular-nums">1</div>
+        </div>
+        <div>
+          <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Next</div>
+          <canvas
+            id="tetris-next"
+            width="100"
+            height="100"
+            class="bg-bg-dark border border-border rounded"
+            style="image-rendering: pixelated;"
+          ></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 text-comment text-xs grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-1 font-mono">
+      <div><span class="text-yellow">h / ←</span> move left</div>
+      <div><span class="text-yellow">l / →</span> move right</div>
+      <div><span class="text-yellow">j / ↓</span> soft drop</div>
+      <div><span class="text-yellow">k / ↑</span> rotate</div>
+      <div><span class="text-yellow">space</span> hard drop</div>
+      <div><span class="text-yellow">p</span> pause</div>
+      <div><span class="text-yellow">r</span> restart</div>
+      <div><span class="text-yellow">q / Esc</span> back to home</div>
+    </div>
+  </article>
+</NvimLayout>
+
+<script>
+  // Suppress the layout's global vim keybindings while on this page so hjkl
+  // doesn't trigger buffer navigation.
+  (window as any).__vimCmdMode = true;
+
+  const CELL = 20;
+  const COLS = 10;
+  const ROWS = 20;
+
+  const canvas = document.getElementById("tetris-canvas") as HTMLCanvasElement | null;
+  const nextCanvas = document.getElementById("tetris-next") as HTMLCanvasElement | null;
+  const scoreEl = document.getElementById("tetris-score");
+  const linesEl = document.getElementById("tetris-lines");
+  const levelEl = document.getElementById("tetris-level");
+  const overlay = document.getElementById("tetris-overlay");
+  const overlayTitle = document.getElementById("tetris-overlay-title");
+  const ctx = canvas?.getContext("2d") ?? null;
+  const nctx = nextCanvas?.getContext("2d") ?? null;
+
+  type Shape = number[][];
+  interface Piece { shape: Shape; x: number; y: number; color: string; key: string; }
+
+  // Read theme colors from CSS variables so pieces follow Claude / Storm / Day themes.
+  function cssVar(name: string, fallback: string) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
+
+  function colors() {
+    return {
+      I: cssVar("--tn-cyan",   "#7dcfff"),
+      O: cssVar("--tn-yellow", "#e0af68"),
+      T: cssVar("--tn-purple", "#bb9af7"),
+      S: cssVar("--tn-green",  "#9ece6a"),
+      Z: cssVar("--tn-red",    "#f7768e"),
+      J: cssVar("--tn-blue",   "#7aa2f7"),
+      L: cssVar("--tn-orange", "#ea8a3d"),
+      grid: cssVar("--tn-bg-highlight", "#292e42"),
+      border: cssVar("--tn-border", "#3b4261"),
+      ghost: cssVar("--tn-comment", "#565f89"),
+    };
+  }
+
+  const SHAPES: Record<string, Shape> = {
+    I: [[1,1,1,1]],
+    O: [[1,1],[1,1]],
+    T: [[0,1,0],[1,1,1]],
+    S: [[0,1,1],[1,1,0]],
+    Z: [[1,1,0],[0,1,1]],
+    J: [[1,0,0],[1,1,1]],
+    L: [[0,0,1],[1,1,1]],
+  };
+
+  let board: (string | 0)[][] = [];
+  let current: Piece | null = null;
+  let nextPiece: Piece | null = null;
+  let score = 0;
+  let lines = 0;
+  let level = 1;
+  let dropInterval = 800;
+  let dropCounter = 0;
+  let lastTime = 0;
+  let paused = false;
+  let gameOver = false;
+  let rafId: number | null = null;
+
+  function newBoard(): (string | 0)[][] {
+    return Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => 0 as 0));
+  }
+
+  function spawnPiece(): Piece {
+    const keys = Object.keys(SHAPES);
+    const key = keys[Math.floor(Math.random() * keys.length)];
+    const shape = SHAPES[key].map((row) => row.slice());
+    return {
+      shape,
+      key,
+      color: (colors() as any)[key],
+      x: Math.floor((COLS - shape[0].length) / 2),
+      y: 0,
+    };
+  }
+
+  function rotate(shape: Shape): Shape {
+    const rows = shape.length;
+    const cols = shape[0].length;
+    const out: Shape = Array.from({ length: cols }, () => Array.from({ length: rows }, () => 0));
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        out[x][rows - 1 - y] = shape[y][x];
+      }
+    }
+    return out;
+  }
+
+  function collide(p: Piece, shape = p.shape, offX = 0, offY = 0): boolean {
+    for (let y = 0; y < shape.length; y++) {
+      for (let x = 0; x < shape[y].length; x++) {
+        if (!shape[y][x]) continue;
+        const bx = p.x + x + offX;
+        const by = p.y + y + offY;
+        if (bx < 0 || bx >= COLS || by >= ROWS) return true;
+        if (by >= 0 && board[by][bx]) return true;
+      }
+    }
+    return false;
+  }
+
+  function merge(p: Piece) {
+    for (let y = 0; y < p.shape.length; y++) {
+      for (let x = 0; x < p.shape[y].length; x++) {
+        if (p.shape[y][x] && p.y + y >= 0) {
+          board[p.y + y][p.x + x] = p.color;
+        }
+      }
+    }
+  }
+
+  function clearLines() {
+    let cleared = 0;
+    for (let y = ROWS - 1; y >= 0; y--) {
+      if (board[y].every((c) => c !== 0)) {
+        board.splice(y, 1);
+        board.unshift(Array.from({ length: COLS }, () => 0 as 0));
+        cleared++;
+        y++;
+      }
+    }
+    if (cleared > 0) {
+      const points = [0, 100, 300, 500, 800][cleared] ?? 0;
+      score += points * level;
+      lines += cleared;
+      const newLevel = Math.floor(lines / 10) + 1;
+      if (newLevel !== level) {
+        level = newLevel;
+        dropInterval = Math.max(80, 800 - (level - 1) * 70);
+      }
+      updateHud();
+    }
+  }
+
+  function updateHud() {
+    if (scoreEl) scoreEl.textContent = String(score);
+    if (linesEl) linesEl.textContent = String(lines);
+    if (levelEl) levelEl.textContent = String(level);
+  }
+
+  function lockAndAdvance() {
+    if (!current) return;
+    merge(current);
+    clearLines();
+    current = nextPiece;
+    nextPiece = spawnPiece();
+    drawNext();
+    if (current && collide(current)) {
+      gameOver = true;
+      if (overlay && overlayTitle) {
+        overlayTitle.textContent = "GAME OVER";
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+      }
+    }
+  }
+
+  function drop() {
+    if (!current) return;
+    if (collide(current, current.shape, 0, 1)) {
+      lockAndAdvance();
+    } else {
+      current.y++;
+    }
+  }
+
+  function hardDrop() {
+    if (!current) return;
+    let dist = 0;
+    while (!collide(current, current.shape, 0, 1)) {
+      current.y++;
+      dist++;
+    }
+    score += dist * 2;
+    lockAndAdvance();
+    updateHud();
+  }
+
+  function move(dx: number) {
+    if (!current) return;
+    if (!collide(current, current.shape, dx, 0)) current.x += dx;
+  }
+
+  function tryRotate() {
+    if (!current) return;
+    const rotated = rotate(current.shape);
+    if (!collide(current, rotated)) {
+      current.shape = rotated;
+    } else if (!collide(current, rotated, -1, 0)) {
+      current.x -= 1;
+      current.shape = rotated;
+    } else if (!collide(current, rotated, 1, 0)) {
+      current.x += 1;
+      current.shape = rotated;
+    }
+  }
+
+  function ghostY(p: Piece): number {
+    let dy = 0;
+    while (!collide(p, p.shape, 0, dy + 1)) dy++;
+    return p.y + dy;
+  }
+
+  function drawCell(c: CanvasRenderingContext2D, x: number, y: number, color: string, ghost = false) {
+    c.fillStyle = ghost ? "transparent" : color;
+    c.fillRect(x * CELL, y * CELL, CELL, CELL);
+    c.strokeStyle = ghost ? color : "rgba(0,0,0,0.35)";
+    c.lineWidth = ghost ? 1 : 1;
+    c.strokeRect(x * CELL + 0.5, y * CELL + 0.5, CELL - 1, CELL - 1);
+  }
+
+  function draw() {
+    if (!ctx || !canvas) return;
+    const C = colors();
+    ctx.fillStyle = cssVar("--tn-bg-dark", "#1a1b26");
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // grid lines
+    ctx.strokeStyle = C.grid;
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= COLS; x++) {
+      ctx.beginPath();
+      ctx.moveTo(x * CELL + 0.5, 0);
+      ctx.lineTo(x * CELL + 0.5, ROWS * CELL);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= ROWS; y++) {
+      ctx.beginPath();
+      ctx.moveTo(0, y * CELL + 0.5);
+      ctx.lineTo(COLS * CELL, y * CELL + 0.5);
+      ctx.stroke();
+    }
+
+    // board
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const v = board[y][x];
+        if (v) drawCell(ctx, x, y, v as string);
+      }
+    }
+
+    // ghost
+    if (current && !gameOver) {
+      const gy = ghostY(current);
+      for (let y = 0; y < current.shape.length; y++) {
+        for (let x = 0; x < current.shape[y].length; x++) {
+          if (current.shape[y][x]) drawCell(ctx, current.x + x, gy + y, C.ghost, true);
+        }
+      }
+
+      // current piece
+      for (let y = 0; y < current.shape.length; y++) {
+        for (let x = 0; x < current.shape[y].length; x++) {
+          if (current.shape[y][x] && current.y + y >= 0) {
+            drawCell(ctx, current.x + x, current.y + y, current.color);
+          }
+        }
+      }
+    }
+  }
+
+  function drawNext() {
+    if (!nctx || !nextCanvas || !nextPiece) return;
+    nctx.fillStyle = cssVar("--tn-bg-dark", "#1a1b26");
+    nctx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+    const s = nextPiece.shape;
+    const sz = 18;
+    const offX = (nextCanvas.width  - s[0].length * sz) / 2;
+    const offY = (nextCanvas.height - s.length    * sz) / 2;
+    for (let y = 0; y < s.length; y++) {
+      for (let x = 0; x < s[y].length; x++) {
+        if (s[y][x]) {
+          nctx.fillStyle = nextPiece.color;
+          nctx.fillRect(offX + x * sz, offY + y * sz, sz, sz);
+          nctx.strokeStyle = "rgba(0,0,0,0.35)";
+          nctx.strokeRect(offX + x * sz + 0.5, offY + y * sz + 0.5, sz - 1, sz - 1);
+        }
+      }
+    }
+  }
+
+  function loop(time = 0) {
+    const dt = time - lastTime;
+    lastTime = time;
+    if (!paused && !gameOver) {
+      dropCounter += dt;
+      if (dropCounter > dropInterval) {
+        drop();
+        dropCounter = 0;
+      }
+    }
+    draw();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function reset() {
+    board = newBoard();
+    score = 0; lines = 0; level = 1; dropInterval = 800; dropCounter = 0;
+    paused = false; gameOver = false;
+    current = spawnPiece();
+    nextPiece = spawnPiece();
+    drawNext();
+    updateHud();
+    if (overlay) {
+      overlay.classList.add("hidden");
+      overlay.classList.remove("flex");
+    }
+  }
+
+  function togglePause() {
+    if (gameOver) return;
+    paused = !paused;
+    if (overlay && overlayTitle) {
+      if (paused) {
+        overlayTitle.textContent = "PAUSED";
+        overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
+      } else {
+        overlay.classList.add("hidden");
+        overlay.classList.remove("flex");
+      }
+    }
+  }
+
+  function handleKey(e: KeyboardEvent) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    // Always-on keys
+    if (k === "r" || k === "R") { e.preventDefault(); reset(); return; }
+    if (k === "p" || k === "P") { e.preventDefault(); togglePause(); return; }
+    if (k === "q" || k === "Q" || k === "Escape") {
+      e.preventDefault();
+      const fn = (window as any).__navigateTo;
+      if (typeof fn === "function") fn("/"); else location.href = "/";
+      return;
+    }
+    if (gameOver || paused) return;
+
+    if (k === "h" || k === "ArrowLeft")  { e.preventDefault(); move(-1); return; }
+    if (k === "l" || k === "ArrowRight") { e.preventDefault(); move( 1); return; }
+    if (k === "j" || k === "ArrowDown")  { e.preventDefault(); drop(); dropCounter = 0; return; }
+    if (k === "k" || k === "ArrowUp")    { e.preventDefault(); tryRotate(); return; }
+    if (k === " ")                       { e.preventDefault(); hardDrop(); return; }
+  }
+
+  window.addEventListener("keydown", handleKey, { capture: true });
+
+  reset();
+  if (rafId) cancelAnimationFrame(rafId);
+  lastTime = 0; dropCounter = 0;
+  rafId = requestAnimationFrame(loop);
+</script>

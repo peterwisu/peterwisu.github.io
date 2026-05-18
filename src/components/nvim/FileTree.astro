@@ -1,4 +1,6 @@
 ---
+import { SITE_CONFIG } from "../../config";
+
 interface Props {
   activeFile: string;
 }
@@ -24,6 +26,17 @@ const tree: Entry[] = [
       { name: "hello-world.md", path: "/blogs", type: "file", ext: "md" },
     ],
   },
+  ...(SITE_CONFIG.showGames
+    ? [{
+        name: "games",
+        type: "folder" as const,
+        children: [
+          { name: "tetris.js",    path: "/games/tetris",    type: "file" as const, ext: "js" },
+          { name: "snake.js",     path: "/games/snake",     type: "file" as const, ext: "js" },
+          { name: "blackjack.js", path: "/games/blackjack", type: "file" as const, ext: "js" },
+        ],
+      }]
+    : []),
   { name: "help.txt", path: "/help", type: "file", ext: "txt" },
 ];
 
@@ -38,6 +51,7 @@ const devicons: Record<string, DevIcon> = {
   py:  { icon: "py",  color: "text-green" },
   tex: { icon: "tex", color: "text-cyan" },
   txt: { icon: "?",   color: "text-purple" },
+  js:  { icon: "js",  color: "text-yellow" },
 };
 
 const fallback: DevIcon = { icon: "?", color: "text-fg-dark" };

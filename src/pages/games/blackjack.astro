@@ -1,0 +1,538 @@
+---
+import NvimLayout from "../../layouts/NvimLayout.astro";
+---
+
+<NvimLayout activeFile="/games/blackjack" fileType="javascript" mode="NORMAL" title="Wish | Blackjack">
+  <article class="buffer-prose" style="max-width: 720px;">
+    <h1>blackjack.js</h1>
+    <p class="text-comment">
+      Single-deck blackjack against the house. Dealer stands on 17.
+      <code>h</code> = hit, <code>s</code> = stand, <code>d</code> = double down,
+      <code>n</code> = next hand, <code>r</code> = reset stats, <code>q</code> / <code>Esc</code> exits.
+    </p>
+
+    <div class="mt-6 flex flex-col sm:flex-row gap-6 items-start">
+      <div class="bj-table bg-bg-dark border border-border rounded p-5 w-full">
+        <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Dealer
+          <span class="text-fg ml-2" id="bj-dealer-total">--</span>
+        </div>
+        <div id="bj-dealer" class="flex gap-2 flex-wrap min-h-[110px] mb-4"></div>
+
+        <div class="text-comment text-[10px] uppercase tracking-wider mb-1">You
+          <span class="text-fg ml-2" id="bj-player-total">--</span>
+        </div>
+        <div id="bj-player" class="flex gap-2 flex-wrap min-h-[110px]"></div>
+
+        <div id="bj-status" class="mt-5 font-mono text-sm text-comment min-h-[1.5em]">deal in…</div>
+      </div>
+
+      <div class="font-mono text-sm space-y-3 min-w-[180px] shrink-0">
+        <div>
+          <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Balance</div>
+          <div id="bj-balance" class="text-blue text-2xl tabular-nums">100</div>
+        </div>
+        <div>
+          <div class="text-comment text-[10px] uppercase tracking-wider mb-1">Bet</div>
+          <div class="flex items-center gap-2">
+            <button data-bet="dec" class="bj-btn" aria-label="Decrease bet">−</button>
+            <span id="bj-bet" class="text-yellow text-xl tabular-nums min-w-[2ch] text-center">10</span>
+            <button data-bet="inc" class="bj-btn" aria-label="Increase bet">+</button>
+          </div>
+          <div class="text-comment text-[10px] mt-1">10 — 100 · step 10</div>
+        </div>
+        <div class="pt-2 border-t border-border text-xs space-y-1">
+          <div>Wins: <span id="bj-wins" class="text-green">0</span></div>
+          <div>Losses: <span id="bj-losses" class="text-red">0</span></div>
+          <div>Pushes: <span id="bj-pushes" class="text-yellow">0</span></div>
+          <div>Blackjacks: <span id="bj-blackjacks" class="text-purple">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex gap-2 flex-wrap" id="bj-buttons">
+      <button data-bj="hit"    class="bj-btn"><span class="text-yellow">h</span> hit</button>
+      <button data-bj="stand"  class="bj-btn"><span class="text-yellow">s</span> stand</button>
+      <button data-bj="double" class="bj-btn"><span class="text-yellow">d</span> double</button>
+      <button data-bj="next"   class="bj-btn"><span class="text-yellow">n</span> deal</button>
+    </div>
+
+    <div class="mt-4 text-comment text-xs font-mono">
+      <span class="text-yellow">−</span>/<span class="text-yellow">+</span> bet ·
+      <span class="text-yellow">r</span> restart game ·
+      <span class="text-yellow">q / Esc</span> back to home
+    </div>
+  </article>
+</NvimLayout>
+
+<style>
+  .bj-card {
+    width: 60px;
+    height: 88px;
+    border-radius: 6px;
+    background: var(--tn-bg-highlight);
+    border: 1px solid var(--tn-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    user-select: none;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+    line-height: 1;
+    position: relative;
+    transform-origin: 50% 100%;
+    animation: bj-card-in 650ms cubic-bezier(0.2, 0.85, 0.25, 1) backwards;
+  }
+  @keyframes bj-card-in {
+    from {
+      opacity: 0;
+      transform: translateY(-26px) rotate(-10deg) scale(0.85);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) rotate(0) scale(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bj-card { animation: none; }
+  }
+  .bj-card.red   { color: var(--tn-red); }
+  .bj-card.black { color: var(--tn-fg); }
+  .bj-card .bj-rank { font-size: 30px; font-weight: 700; }
+  .bj-card .bj-corner {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--tn-bg);
+    border: 2px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.25);
+  }
+  .bj-card.back {
+    color: var(--tn-blue);
+    font-size: 28px;
+    background-image: linear-gradient(135deg, var(--tn-bg-dark) 0%, var(--tn-bg-highlight) 100%);
+  }
+  .bj-btn {
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--tn-border);
+    background: var(--tn-bg-dark);
+    color: var(--tn-fg);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .bj-btn:hover { background: var(--tn-bg-highlight); }
+  .bj-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+</style>
+
+<script>
+  (window as any).__vimCmdMode = true;
+
+  type Suit = "♠" | "♥" | "♦" | "♣";
+  type Rank = "A" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "J" | "Q" | "K";
+  interface Card { rank: Rank; suit: Suit; }
+
+  const SUITS: Suit[] = ["♠", "♥", "♦", "♣"];
+  const RANKS: Rank[] = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+  const STATS_KEY   = "blackjack-stats";
+  const BALANCE_KEY = "blackjack-balance";
+  const BET_KEY     = "blackjack-bet";
+  const START_BALANCE = 100;
+  const MIN_BET = 10;
+  const MAX_BET = 100;
+  const BET_STEP = 10;
+
+  const dealerEl    = document.getElementById("bj-dealer");
+  const playerEl    = document.getElementById("bj-player");
+  const dealerTotal = document.getElementById("bj-dealer-total");
+  const playerTotal = document.getElementById("bj-player-total");
+  const statusEl    = document.getElementById("bj-status");
+  const winsEl      = document.getElementById("bj-wins");
+  const lossesEl    = document.getElementById("bj-losses");
+  const pushesEl    = document.getElementById("bj-pushes");
+  const bjsEl       = document.getElementById("bj-blackjacks");
+  const balanceEl   = document.getElementById("bj-balance");
+  const betEl       = document.getElementById("bj-bet");
+
+  let deck: Card[] = [];
+  let dealer: Card[] = [];
+  let player: Card[] = [];
+  let phase: "dealing" | "playing" | "dealer" | "ended" = "dealing";
+  let revealed = false;
+
+  let stats = { wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
+  let balance = START_BALANCE;
+  let bet = MIN_BET;
+  let wager = MIN_BET; // locked at deal time; doubles on double-down
+  try {
+    const raw = localStorage.getItem(STATS_KEY);
+    if (raw) stats = { ...stats, ...JSON.parse(raw) };
+  } catch {}
+  try {
+    const b = Number(localStorage.getItem(BALANCE_KEY));
+    if (Number.isFinite(b) && b >= 0) balance = b;
+  } catch {}
+  try {
+    const b = Number(localStorage.getItem(BET_KEY));
+    if (Number.isFinite(b) && b >= MIN_BET && b <= MAX_BET) bet = b;
+  } catch {}
+
+  function saveStats()   { try { localStorage.setItem(STATS_KEY,   JSON.stringify(stats)); } catch {} }
+  function saveBalance() { try { localStorage.setItem(BALANCE_KEY, String(balance)); } catch {} }
+  function saveBet()     { try { localStorage.setItem(BET_KEY,     String(bet)); } catch {} }
+
+  function clampBet() {
+    const cap = Math.min(MAX_BET, Math.max(MIN_BET, balance));
+    if (bet > cap) bet = cap;
+    if (bet < MIN_BET) bet = MIN_BET;
+  }
+
+  function updateMoney() {
+    if (balanceEl) balanceEl.textContent = String(balance);
+    if (betEl)     betEl.textContent     = String(bet);
+    const broke = balance < MIN_BET;
+    const dec = document.querySelector<HTMLButtonElement>("[data-bet=dec]");
+    const inc = document.querySelector<HTMLButtonElement>("[data-bet=inc]");
+    const between = phase === "ended" || phase === "dealing" && dealer.length === 0;
+    if (dec) dec.disabled = !between || bet <= MIN_BET;
+    if (inc) inc.disabled = !between || bet >= Math.min(MAX_BET, balance);
+    const topup = document.querySelector<HTMLButtonElement>("[data-bj=topup]");
+    if (topup) topup.hidden = !broke;
+  }
+
+  function adjustBet(delta: number) {
+    if (phase === "playing" || phase === "dealer") return;
+    if (dealer.length > 0 && phase === "dealing") return;
+    bet = Math.max(MIN_BET, Math.min(Math.min(MAX_BET, balance || MIN_BET), bet + delta));
+    saveBet();
+    updateMoney();
+  }
+
+  function restartGame() {
+    balance = START_BALANCE;
+    bet = MIN_BET;
+    stats = { wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
+    saveBalance();
+    saveBet();
+    saveStats();
+    clampBet();
+    phase = "ended";
+    revealed = false;
+    dealer = []; player = [];
+    clearHands();
+    renderTotals();
+    setStatus("new game · press n to deal", "text-cyan");
+    updateMoney();
+    updateButtons();
+    updateStats();
+  }
+
+  function buildDeck(): Card[] {
+    const out: Card[] = [];
+    for (const s of SUITS) for (const r of RANKS) out.push({ rank: r, suit: s });
+    // Fisher-Yates
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
+  function ensureDeck() {
+    if (deck.length < 15) deck = buildDeck();
+  }
+
+  function draw(): Card {
+    ensureDeck();
+    return deck.pop()!;
+  }
+
+  function handValue(cards: Card[]): { total: number; soft: boolean } {
+    let total = 0;
+    let aces = 0;
+    for (const c of cards) {
+      if (c.rank === "A") { total += 11; aces++; }
+      else if (c.rank === "J" || c.rank === "Q" || c.rank === "K") total += 10;
+      else total += parseInt(c.rank, 10);
+    }
+    while (total > 21 && aces > 0) { total -= 10; aces--; }
+    return { total, soft: aces > 0 };
+  }
+
+  function isBlackjack(cards: Card[]): boolean {
+    return cards.length === 2 && handValue(cards).total === 21;
+  }
+
+  function cardEl(c: Card | null, faceDown = false): HTMLDivElement {
+    const div = document.createElement("div");
+    div.className = "bj-card";
+    if (faceDown || !c) {
+      div.classList.add("back");
+      div.textContent = "?";
+      return div;
+    }
+    const red = c.suit === "♥" || c.suit === "♦";
+    div.classList.add(red ? "red" : "black");
+    div.innerHTML =
+      `<div class="bj-corner">${c.suit}</div>` +
+      `<div class="bj-rank">${c.rank}</div>`;
+    return div;
+  }
+
+  function wait(ms: number) { return new Promise<void>((r) => setTimeout(r, ms)); }
+
+  function clearHands() {
+    if (dealerEl) dealerEl.innerHTML = "";
+    if (playerEl) playerEl.innerHTML = "";
+  }
+
+  function appendCard(container: HTMLElement | null, card: Card, hidden = false) {
+    if (!container) return;
+    const el = cardEl(card, hidden);
+    container.appendChild(el);
+  }
+
+  function flipDealerHidden() {
+    if (!dealerEl || dealer.length < 2) return;
+    const second = dealerEl.children[1] as HTMLElement | undefined;
+    if (second && second.classList.contains("back")) {
+      const fresh = cardEl(dealer[1], false);
+      second.replaceWith(fresh);
+    }
+  }
+
+  function renderTotals() {
+    if (dealerTotal) {
+      if (revealed) {
+        const { total, soft } = handValue(dealer);
+        dealerTotal.textContent = soft && total !== 21 ? `${total - 10}/${total}` : String(total);
+      } else {
+        const up = dealer[0];
+        if (up) {
+          const v = up.rank === "A" ? "11" : (up.rank === "J" || up.rank === "Q" || up.rank === "K") ? "10" : up.rank;
+          dealerTotal.textContent = `${v} + ?`;
+        } else dealerTotal.textContent = "--";
+      }
+    }
+    if (playerTotal) {
+      const { total, soft } = handValue(player);
+      playerTotal.textContent = soft && total !== 21 ? `${total - 10}/${total}` : String(total);
+    }
+  }
+
+  function updateButtons() {
+    const hit    = document.querySelector<HTMLButtonElement>("[data-bj=hit]");
+    const stand  = document.querySelector<HTMLButtonElement>("[data-bj=stand]");
+    const dbl    = document.querySelector<HTMLButtonElement>("[data-bj=double]");
+    const next   = document.querySelector<HTMLButtonElement>("[data-bj=next]");
+    const playing = phase === "playing";
+    if (hit)   hit.disabled   = !playing;
+    if (stand) stand.disabled = !playing;
+    if (dbl)   dbl.disabled   = !(playing && player.length === 2 && balance >= 2 * wager);
+    if (next)  next.disabled  = phase !== "ended" || balance < MIN_BET;
+  }
+
+  function updateStats() {
+    if (winsEl)   winsEl.textContent   = String(stats.wins);
+    if (lossesEl) lossesEl.textContent = String(stats.losses);
+    if (pushesEl) pushesEl.textContent = String(stats.pushes);
+    if (bjsEl)    bjsEl.textContent    = String(stats.blackjacks);
+  }
+
+  function setStatus(text: string, cls = "text-comment") {
+    if (!statusEl) return;
+    statusEl.className = `mt-5 font-mono text-sm min-h-[1.5em] ${cls}`;
+    statusEl.textContent = text;
+  }
+
+  function winChips(amount: number) { balance += amount; saveBalance(); }
+  function loseChips(amount: number) { balance -= amount; saveBalance(); }
+
+  async function newHand() {
+    if (balance < MIN_BET) {
+      setStatus("GAME OVER — press r to restart", "text-red");
+      phase = "ended";
+      updateButtons();
+      updateMoney();
+      return;
+    }
+    clampBet();
+    wager = bet;
+
+    phase = "dealing";
+    revealed = false;
+    dealer = []; player = [];
+    clearHands();
+    renderTotals();
+    updateButtons();
+    updateMoney();
+    setStatus(`dealing… bet ${wager}`, "text-fg-dark");
+    ensureDeck();
+
+    const STEP = 280;
+    await wait(180);
+    player.push(draw()); appendCard(playerEl, player[0]);           renderTotals(); await wait(STEP);
+    dealer.push(draw()); appendCard(dealerEl, dealer[0]);           renderTotals(); await wait(STEP);
+    player.push(draw()); appendCard(playerEl, player[1]);           renderTotals(); await wait(STEP);
+    dealer.push(draw()); appendCard(dealerEl, dealer[1], true);     renderTotals(); await wait(STEP);
+
+    phase = "playing";
+
+    if (isBlackjack(player)) {
+      await wait(150);
+      revealed = true;
+      flipDealerHidden();
+      renderTotals();
+      if (isBlackjack(dealer)) {
+        stats.pushes++; saveStats();
+        finish("push — both blackjack", "text-yellow");
+      } else {
+        const payout = Math.floor(wager * 1.5);
+        winChips(payout);
+        stats.wins++; stats.blackjacks++; saveStats();
+        finish(`BLACKJACK! +${payout} (3:2)`, "text-purple");
+      }
+    } else if (isBlackjack(dealer)) {
+      await wait(150);
+      revealed = true;
+      flipDealerHidden();
+      renderTotals();
+      loseChips(wager);
+      stats.losses++; saveStats();
+      finish(`dealer blackjack — -${wager}`, "text-red");
+    } else {
+      setStatus(`playing · bet ${wager} · hit, stand, or double`, "text-fg-dark");
+    }
+    updateButtons();
+    updateStats();
+  }
+
+  function finish(text: string, cls: string) {
+    phase = "ended";
+    const tail = balance < MIN_BET
+      ? "· GAME OVER — press r to restart"
+      : "· press n to deal";
+    const finalCls = balance < MIN_BET ? "text-red" : cls;
+    setStatus(`${text} ${tail}`, finalCls);
+    updateButtons();
+    updateStats();
+    updateMoney();
+  }
+
+  async function hit() {
+    if (phase !== "playing") return;
+    const card = draw();
+    player.push(card);
+    appendCard(playerEl, card);
+    renderTotals();
+    updateButtons();
+    if (handValue(player).total > 21) {
+      await wait(500);
+      revealed = true;
+      flipDealerHidden();
+      renderTotals();
+      loseChips(wager);
+      stats.losses++; saveStats();
+      finish(`BUST — -${wager}`, "text-red");
+    }
+  }
+
+  async function stand() {
+    if (phase !== "playing") return;
+    phase = "dealer";
+    updateButtons();
+    await dealerPlay();
+  }
+
+  async function doubleDown() {
+    if (phase !== "playing" || player.length !== 2) return;
+    if (balance < 2 * wager) return; // can't afford
+    wager = wager * 2;
+    phase = "dealer";
+    updateButtons();
+    const card = draw();
+    player.push(card);
+    appendCard(playerEl, card);
+    renderTotals();
+    if (handValue(player).total > 21) {
+      await wait(500);
+      revealed = true;
+      flipDealerHidden();
+      renderTotals();
+      loseChips(wager);
+      stats.losses++; saveStats();
+      finish(`BUST on double — -${wager}`, "text-red");
+      return;
+    }
+    await wait(350);
+    await dealerPlay();
+  }
+
+  async function dealerPlay() {
+    await wait(250);
+    revealed = true;
+    flipDealerHidden();
+    renderTotals();
+    await wait(400);
+    while (handValue(dealer).total < 17) {
+      const card = draw();
+      dealer.push(card);
+      appendCard(dealerEl, card);
+      renderTotals();
+      await wait(500);
+    }
+    resolve();
+  }
+
+  function resolve() {
+    const p = handValue(player).total;
+    const d = handValue(dealer).total;
+    if (d > 21)      { winChips(wager);  stats.wins++;   saveStats(); finish(`dealer busts (${d}) — +${wager}`, "text-green"); }
+    else if (p > d)  { winChips(wager);  stats.wins++;   saveStats(); finish(`you win ${p} vs ${d} — +${wager}`, "text-green"); }
+    else if (p < d)  { loseChips(wager); stats.losses++; saveStats(); finish(`you lose ${p} vs ${d} — -${wager}`, "text-red"); }
+    else             {                   stats.pushes++; saveStats(); finish(`push at ${p}`, "text-yellow"); }
+  }
+
+  // Wire buttons
+  document.querySelector("[data-bj=hit]")?.addEventListener("click", hit);
+  document.querySelector("[data-bj=stand]")?.addEventListener("click", stand);
+  document.querySelector("[data-bj=double]")?.addEventListener("click", doubleDown);
+  document.querySelector("[data-bj=next]")?.addEventListener("click", newHand);
+  document.querySelector("[data-bet=dec]")?.addEventListener("click", () => adjustBet(-BET_STEP));
+  document.querySelector("[data-bet=inc]")?.addEventListener("click", () => adjustBet( BET_STEP));
+
+  function handleKey(e: KeyboardEvent) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === "q" || k === "escape") {
+      e.preventDefault();
+      const fn = (window as any).__navigateTo;
+      if (typeof fn === "function") fn("/"); else location.href = "/";
+      return;
+    }
+    if (k === "r") { e.preventDefault(); restartGame(); return; }
+    if (e.key === "+" || e.key === "=") { e.preventDefault(); adjustBet( BET_STEP); return; }
+    if (e.key === "-" || e.key === "_") { e.preventDefault(); adjustBet(-BET_STEP); return; }
+    if (k === "h") { e.preventDefault(); hit(); return; }
+    if (k === "s") { e.preventDefault(); stand(); return; }
+    if (k === "d") { e.preventDefault(); doubleDown(); return; }
+    if (k === "n") { e.preventDefault(); if (phase === "ended" && balance >= MIN_BET) newHand(); return; }
+  }
+
+  window.addEventListener("keydown", handleKey, { capture: true });
+
+  deck = buildDeck();
+  clampBet();
+  updateMoney();
+  updateStats();
+  newHand();
+</script>

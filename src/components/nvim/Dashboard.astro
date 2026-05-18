@@ -86,12 +86,17 @@ const itemStagger = 55;
   </ul>
 
   <div
-    class="mt-10 text-comment text-xs flex gap-6 dash-enter"
+    class="mt-10 text-comment text-xs dash-enter"
     style={`animation-delay: ${itemBaseDelay + items.length * itemStagger + 200}ms`}
   >
-    <span>startuptime: <span class="text-fg-dark">12ms</span></span>
-    <span>plugins: <span class="text-fg-dark">47</span></span>
-    <span>year: <span class="text-fg-dark">2026</span></span>
+    <div class="mb-2">
+      <span>time: <span id="dash-time" class="text-fg-dark">--:--</span> <span id="dash-tz" class="text-fg-dark">---</span> <span class="text-comment">(UK)</span></span>
+    </div>
+    <div class="flex gap-6">
+      <span>day: <span id="dash-day" class="text-fg-dark">--</span></span>
+      <span>month: <span id="dash-month" class="text-fg-dark">--</span></span>
+      <span>year: <span id="dash-year" class="text-fg-dark">----</span></span>
+    </div>
   </div>
 
   <div
@@ -114,6 +119,44 @@ const itemStagger = 55;
 </div>
 
 <script>
+  // Fill date stats + UK time. Day/month/year use the visitor's clock; the
+  // time line is always in Europe/London so the BST/GMT label is correct.
+  function fillDateStats() {
+    const now = new Date();
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+    const d = document.getElementById("dash-day");
+    const m = document.getElementById("dash-month");
+    const y = document.getElementById("dash-year");
+    if (d) d.textContent = String(now.getDate()).padStart(2, "0");
+    if (m) m.textContent = months[now.getMonth()];
+    if (y) y.textContent = String(now.getFullYear());
+
+    const tEl = document.getElementById("dash-time");
+    const zEl = document.getElementById("dash-tz");
+    try {
+      const ukTime = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/London",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(now);
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/London",
+        timeZoneName: "short",
+      }).formatToParts(now);
+      const tzName = parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+      const offset = tzName === "BST" ? "UTC+1" : tzName === "GMT" ? "UTC+0" : "";
+      if (tEl) tEl.textContent = ukTime;
+      if (zEl) zEl.textContent = offset ? `${tzName} (${offset})` : tzName;
+    } catch {
+      if (tEl) tEl.textContent = now.toTimeString().slice(0, 5);
+      if (zEl) zEl.textContent = "";
+    }
+  }
+  fillDateStats();
+  setInterval(fillDateStats, 30000);
+
   const termOverlay = document.getElementById("terminal-overlay");
   const termOutput  = document.getElementById("terminal-output");
   const bootOverlay = document.getElementById("boot-overlay");
