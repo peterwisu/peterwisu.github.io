@@ -1,0 +1,108 @@
+---
+import { getCollection } from "astro:content";
+import NvimLayout from "../layouts/NvimLayout.astro";
+
+const all = await getCollection("publications", ({ data }) => !data.draft);
+
+const preprints = all
+  .filter((p) => p.data.preprint)
+  .sort((a, b) => b.data.year - a.data.year);
+
+const publications = all.filter((p) => !p.data.preprint);
+
+const groups: Record<number, typeof publications> = {};
+for (const p of publications) {
+  (groups[p.data.year] ??= []).push(p);
+}
+const years = Object.keys(groups).map(Number).sort((a, b) => b - a);
+
+function authorChunks(name: string) {
+  const isMe = /suharitdamrong/i.test(name);
+  return { bold: isMe, text: name };
+}
+
+interface Link { label: string; href: string }
+function buildLinks(data: {
+  pdf?: string; code?: string; arxiv?: string; bibtex?: string; project?: string;
+}): Link[] {
+  const links: Link[] = [];
+  if (data.arxiv)  links.push({ label: "arxiv",   href: data.arxiv });
+  if (data.pdf)    links.push({ label: "pdf",     href: data.pdf });
+  if (data.code)   links.push({ label: "code",    href: data.code });
+  if (data.project)links.push({ label: "project", href: data.project });
+  if (data.bibtex) links.push({ label: "bibtex",  href: data.bibtex });
+  return links;
+}
+---
+
+<NvimLayout activeFile="/research" fileType="bibtex" mode="NORMAL" title="Wish | Research">
+  <article class="buffer-prose">
+    <h1>Research</h1>
+    <p class="text-comment">Preprints and peer-reviewed work. Click links for PDF / code / BibTeX.</p>
+
+    {years.length > 0 && (
+      <section class="mt-10">
+        <h2 class="!mt-0 text-orange text-xs uppercase tracking-wider !font-medium">Publications</h2>
+        {years.map((y) => (
+          <div class="mt-6">
+            <h3 class="!mt-0 text-yellow text-xs uppercase tracking-wider !font-medium">{y}</h3>
+            <ul class="mt-3 space-y-6 list-none pl-0">
+              {groups[y].map((p) => (
+                <li>
+                  <div class="text-fg font-medium leading-snug">{p.data.title}</div>
+                  <div class="text-fg-dark text-sm mt-1">
+                    {p.data.authors.map((name, i) => {
+                      const c = authorChunks(name);
+                      return <>
+                        {c.bold ? <strong class="text-blue">{c.text}</strong> : <span>{c.text}</span>}
+                        {i < p.data.authors.length - 1 && <span>, </span>}
+                      </>;
+                    })}
+                  </div>
+                  <div class="text-comment text-xs italic mt-1">{p.data.venue}, {p.data.year}</div>
+                  {buildLinks(p.data).length > 0 && (
+                    <div class="mt-2 flex gap-3 text-xs">
+                      {buildLinks(p.data).map((l) => (
+                        <a href={l.href} class="text-cyan hover:underline">[{l.label}]</a>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+    )}
+
+    {preprints.length > 0 && (
+      <section class="mt-10">
+        <h2 class="!mt-0 text-orange text-xs uppercase tracking-wider !font-medium">Preprints</h2>
+        <ul class="mt-4 space-y-6 list-none pl-0">
+          {preprints.map((p) => (
+            <li>
+              <div class="text-fg font-medium leading-snug">{p.data.title}</div>
+              <div class="text-fg-dark text-sm mt-1">
+                {p.data.authors.map((name, i) => {
+                  const c = authorChunks(name);
+                  return <>
+                    {c.bold ? <strong class="text-blue">{c.text}</strong> : <span>{c.text}</span>}
+                    {i < p.data.authors.length - 1 && <span>, </span>}
+                  </>;
+                })}
+              </div>
+              <div class="text-comment text-xs italic mt-1">{p.data.venue}</div>
+              {buildLinks(p.data).length > 0 && (
+                <div class="mt-2 flex gap-3 text-xs">
+                  {buildLinks(p.data).map((l) => (
+                    <a href={l.href} class="text-cyan hover:underline">[{l.label}]</a>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </article>
+</NvimLayout>

@@ -1,0 +1,33 @@
+---
+const wishLines = [
+  "██╗    ██╗██╗███████╗██╗  ██╗",
+  "██║    ██║██║██╔════╝██║  ██║",
+  "██║ █╗ ██║██║███████╗███████║",
+  "██║███╗██║██║╚════██║██╔══██║",
+  "╚███╔███╔╝██║███████║██║  ██║",
+  " ╚══╝╚══╝ ╚═╝╚══════╝╚═╝  ╚═╝",
+];
+---
+
+<div class="text-center">
+  <div class="text-blue logo-pulse inline-block text-left leading-[1.05]">
+    {wishLines.map((line, i) => (
+      <div
+        class="dash-enter font-mono"
+        style={`animation-delay: ${i * 75}ms; white-space: pre;`}
+      >{line}</div>
+    ))}
+  </div>
+  <div
+    class="text-purple tn-glow text-xl tracking-wide mt-4 font-medium dash-enter"
+    style="animation-delay: 520ms;"
+  >Wish Suharitdamrong</div>
+  <div
+    class="text-comment text-sm mt-1 dash-enter"
+    style="animation-delay: 600ms;"
+  >(Peter) · ML researcher</div>
+  <div
+    class="text-comment text-xs mt-2 dash-enter"
+    style="animation-delay: 660ms;"
+  >wish.suharitdamrong --version 2026.1</div>
+</div>

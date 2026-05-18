@@ -1,0 +1,43 @@
+---
+import { getCollection } from "astro:content";
+import NvimLayout from "../layouts/NvimLayout.astro";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+function fmtDate(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+---
+
+<NvimLayout activeFile="/blogs" fileType="markdown" mode="NORMAL" title="Wish | Blog">
+  <article class="buffer-prose">
+    <h1>Blog</h1>
+    <p class="text-comment">Short-form writing and research notes.</p>
+
+    {posts.length === 0 ? (
+      <p class="text-comment italic mt-8">No posts yet.</p>
+    ) : (
+      <ul class="mt-8 space-y-6 list-none pl-0">
+        {posts.map((p) => (
+          <li>
+            <a href={`/blogs/${p.id}`} class="block group no-underline">
+              <div class="text-comment text-xs font-medium">{fmtDate(p.data.date)}</div>
+              <div class="text-blue group-hover:underline font-medium mt-1">{p.data.title}</div>
+              {p.data.summary && (
+                <div class="text-fg-dark text-sm mt-1 leading-relaxed">{p.data.summary}</div>
+              )}
+              {p.data.tags && p.data.tags.length > 0 && (
+                <div class="mt-2 flex gap-2 text-[11px] flex-wrap">
+                  {p.data.tags.map((t) => (
+                    <span class="text-purple bg-bg-highlight px-2 py-0.5 rounded font-medium">#{t}</span>
+                  ))}
+                </div>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </article>
+</NvimLayout>

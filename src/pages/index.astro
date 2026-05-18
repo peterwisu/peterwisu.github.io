@@ -1,0 +1,36 @@
+---
+import "../styles/global.css";
+import Dashboard from "../components/nvim/Dashboard.astro";
+import StatusBar from "../components/nvim/StatusBar.astro";
+import ScanlinesOverlay from "../components/nvim/ScanlinesOverlay.astro";
+import TelescopeModal from "../components/nvim/TelescopeModal.astro";
+import PageLoader from "../components/nvim/PageLoader.astro";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Wish | Home</title>
+    <script is:inline>
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "light") document.documentElement.classList.add("light");
+        else if (t === "storm") document.documentElement.classList.add("storm");
+      } catch (_) {}
+    </script>
+  </head>
+  <body class="bg-bg text-fg font-mono">
+    <PageLoader />
+    <ScanlinesOverlay />
+    <div class="flex h-screen flex-col">
+      <div class="flex-1 overflow-auto">
+        <Dashboard />
+      </div>
+      <StatusBar mode="NORMAL" fileType="dashboard" activeFile="home" />
+    </div>
+    <TelescopeModal />
+  </body>
+</html>

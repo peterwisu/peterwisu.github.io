@@ -1,0 +1,444 @@
+---
+import AsciiLogo from "./AsciiLogo.astro";
+
+interface Item {
+  icon: string;
+  label: string;
+  keys: string;
+  href: string;
+  external?: boolean;
+  download?: boolean;
+}
+
+const items: Item[] = [
+  { icon: "→", label: "About",        keys: "SPC a", href: "/readme" },
+  { icon: "≡", label: "Research",     keys: "SPC p", href: "/research" },
+  { icon: "λ", label: "Projects",     keys: "SPC P", href: "/projects" },
+  { icon: "✎", label: "Blog",         keys: "SPC n", href: "/blogs" },
+  { icon: "↓", label: "CV (download)", keys: "SPC c", href: "/cv/cv.pdf", download: true },
+  { icon: "⌬", label: "GitHub",       keys: "SPC g", href: "https://github.com/peterwisu", external: true },
+  { icon: "?", label: "Help",         keys: "SPC h", href: "/help" },
+];
+
+const itemBaseDelay = 800;
+const itemStagger = 55;
+---
+
+<!-- Terminal pre-boot overlay (clone → cd → nvim) -->
+<div
+  id="terminal-overlay"
+  class="fixed inset-0 z-50 bg-black p-6 font-mono text-[13px] overflow-hidden cursor-pointer text-gray-200"
+  aria-hidden="true"
+>
+  <div class="text-gray-500 text-[10px] mb-3 tracking-wider">
+    terminal · <span class="text-yellow-300">press any key to skip</span>
+  </div>
+  <div id="terminal-output" class="leading-relaxed"></div>
+</div>
+
+<!-- Vim boot overlay (loaded after terminal finishes) -->
+<div
+  id="boot-overlay"
+  class="fixed inset-0 z-40 bg-bg flex flex-col items-start p-8 overflow-hidden cursor-pointer"
+  style="opacity: 0;"
+  aria-hidden="true"
+>
+  <div class="text-comment text-[11px] mb-3 font-mono">
+    NVIM v0.10.0 · LazyVim · <span class="text-yellow">press any key to skip</span>
+  </div>
+  <div id="boot-log" class="text-[11px] leading-relaxed font-mono whitespace-pre"></div>
+</div>
+
+<div
+  id="dashboard-content"
+  class="dashboard-pending relative flex h-full flex-col items-center justify-center px-6 py-12 select-none"
+>
+  <div
+    class="vim-tildes absolute left-0 top-0 bottom-0 pt-3 pl-4 pointer-events-none overflow-hidden dash-enter"
+    style="animation-delay: 80ms;"
+    aria-hidden="true"
+  >
+    {Array.from({ length: 60 }).map(() => (<div>~</div>))}
+  </div>
+
+  <AsciiLogo />
+
+  <ul class="mt-12 space-y-0.5 text-sm">
+    {items.map((it, i) => (
+      <li class="dash-enter" style={`animation-delay: ${itemBaseDelay + i * itemStagger}ms`}>
+        <a
+          href={it.href}
+          target={it.external ? "_blank" : undefined}
+          rel={it.external ? "noopener noreferrer" : undefined}
+          download={it.download ? "" : undefined}
+          data-index={i}
+          class="dash-item group flex items-center gap-5 rounded px-3 py-1.5 transition text-blue"
+        >
+          <span class="flex items-center gap-2">
+            <span class="caret w-[0.55em] h-[1em] inline-block"></span>
+            <span class="tn-glow w-5 text-center text-base">{it.icon}</span>
+          </span>
+          <span class="text-fg min-w-[200px]">{it.label}</span>
+          <span class="text-comment text-xs font-medium">{it.keys}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <div
+    class="mt-10 text-comment text-xs flex gap-6 dash-enter"
+    style={`animation-delay: ${itemBaseDelay + items.length * itemStagger + 200}ms`}
+  >
+    <span>startuptime: <span class="text-fg-dark">12ms</span></span>
+    <span>plugins: <span class="text-fg-dark">47</span></span>
+    <span>year: <span class="text-fg-dark">2026</span></span>
+  </div>
+
+  <div
+    class="mt-4 text-comment text-[10px] dash-enter"
+    style={`animation-delay: ${itemBaseDelay + items.length * itemStagger + 280}ms`}
+  >
+    j/k or ↑/↓ to navigate · enter or l to open · SPC for leader · : for command
+  </div>
+</div>
+
+<div
+  id="vim-cmdline"
+  hidden
+  class="fixed left-0 right-0 z-30 bg-bg-dark border-t border-border px-3 py-1 font-mono text-sm"
+  style="bottom: 28px;"
+>
+  <span class="text-red font-bold mr-3 text-xs">COMMAND</span>
+  <span class="text-yellow">:</span><span id="vim-cmdline-input" class="text-fg"></span><span class="terminal-cursor text-fg">▌</span>
+  <span class="ml-4 text-comment text-[10px]">enter to run · esc to cancel · try :Telescope, :readme, :cv</span>
+</div>
+
+<script>
+  const termOverlay = document.getElementById("terminal-overlay");
+  const termOutput  = document.getElementById("terminal-output");
+  const bootOverlay = document.getElementById("boot-overlay");
+  const bootLog     = document.getElementById("boot-log");
+  const dash        = document.getElementById("dashboard-content");
+
+  // -------- Shared state --------
+  let done = false;
+
+  function reveal() {
+    if (done) return;
+    done = true;
+    termOverlay?.remove();
+    bootOverlay?.remove();
+    dash?.classList.remove("dashboard-pending");
+    dash?.classList.add("dashboard-ready");
+  }
+
+  const skip = (e?: Event) => {
+    e?.stopImmediatePropagation?.();
+    e?.preventDefault?.();
+    reveal();
+  };
+  window.addEventListener("keydown", skip, { once: true, capture: true });
+  termOverlay?.addEventListener("click", skip, { once: true });
+  bootOverlay?.addEventListener("click", skip, { once: true });
+
+  const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+  // -------- Terminal phase --------
+  function appendLine(html: string): HTMLElement {
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    termOutput?.appendChild(div);
+    return div;
+  }
+
+  function appendPrompt(host: string, path: string): HTMLElement {
+    return appendLine(
+      `<span class="text-green-400">${host}</span> ` +
+      `<span class="text-cyan-400">${path}</span> ` +
+      `<span class="text-gray-500">%</span> ` +
+      `<span class="cmd"></span><span class="terminal-cursor text-gray-200">▌</span>`
+    );
+  }
+
+  async function typeInto(line: HTMLElement, text: string, speed = 18) {
+    const cmd = line.querySelector(".cmd");
+    if (!cmd) return;
+    for (const ch of text) {
+      if (done) return;
+      cmd.appendChild(document.createTextNode(ch));
+      await sleep(speed);
+    }
+  }
+
+  function removeCursor(line: HTMLElement) {
+    line.querySelector(".terminal-cursor")?.remove();
+  }
+
+  async function runTerminal() {
+    if (done || !termOutput) return;
+
+    const p1 = appendPrompt("wish@localhost", "~");
+    await typeInto(p1, "git clone https://github.com/peterwisu/personal_website.git", 16);
+    if (done) return;
+    await sleep(280);
+    removeCursor(p1);
+
+    const cloneOutput = [
+      "Cloning into 'personal_website'...",
+      "remote: Enumerating objects: 142, done.",
+      "remote: Counting objects: 100% (142/142), done.",
+      "remote: Compressing objects: 100% (89/89), done.",
+      "Receiving objects: 100% (142/142), 47.2 KiB | 8.10 MiB/s, done.",
+      "Resolving deltas: 100% (62/62), done.",
+    ];
+    for (const ln of cloneOutput) {
+      if (done) return;
+      appendLine(`<span class="text-gray-400">${ln}</span>`);
+      await sleep(65);
+    }
+    if (done) return;
+    await sleep(280);
+
+    const p2 = appendPrompt("wish@localhost", "~");
+    await typeInto(p2, "cd personal_website", 22);
+    if (done) return;
+    await sleep(180);
+    removeCursor(p2);
+
+    const p3 = appendPrompt("wish@localhost", "personal_website");
+    await typeInto(p3, "nvim .", 36);
+    if (done) return;
+    await sleep(420);
+    removeCursor(p3);
+  }
+
+  // -------- Vim boot phase --------
+  interface BootLine { text: string; ok?: boolean; pad?: number; cls?: string; }
+  const bootLines: BootLine[] = [
+    { text: "Reading ~/.config/nvim/init.lua", cls: "text-comment" },
+    { text: "lazy.nvim",          ok: true, pad: 28 },
+    { text: "alpha-nvim",         ok: true, pad: 28 },
+    { text: "telescope.nvim",     ok: true, pad: 28 },
+    { text: "nvim-tree.lua",      ok: true, pad: 28 },
+    { text: "lualine.nvim",       ok: true, pad: 28 },
+    { text: "bufferline.nvim",    ok: true, pad: 28 },
+    { text: "which-key.nvim",     ok: true, pad: 28 },
+    { text: "nvim-treesitter",    ok: true, pad: 28 },
+    { text: "mason.nvim",         ok: true, pad: 28 },
+    { text: "nvim-cmp",           ok: true, pad: 28 },
+    { text: "... 37 more plugins", cls: "text-comment" },
+    { text: "──────────────────────────────", cls: "text-comment" },
+    { text: "47 plugins · startup 12ms · LSPs ready", cls: "text-green" },
+  ];
+
+  async function runBoot() {
+    if (done || !bootLog || !bootOverlay) return;
+
+    // Cross-fade from black terminal into vim boot overlay
+    bootOverlay.style.transition = "opacity 240ms ease-out";
+    bootOverlay.style.opacity = "1";
+    termOverlay?.remove();
+
+    for (const ln of bootLines) {
+      if (done) return;
+      const row = document.createElement("div");
+      if (ln.ok) {
+        row.innerHTML =
+          `<span class="text-fg-dark">${ln.text.padEnd(ln.pad ?? 24)}</span>` +
+          `<span class="text-green">  ✓</span>`;
+      } else {
+        row.innerHTML = `<span class="${ln.cls ?? 'text-fg-dark'}">${ln.text}</span>`;
+      }
+      bootLog.appendChild(row);
+      await sleep(60);
+    }
+    if (done) return;
+    await sleep(280);
+
+    bootOverlay.style.transition = "opacity 260ms ease-out";
+    bootOverlay.style.opacity = "0";
+    await sleep(280);
+  }
+
+  async function runIntro() {
+    await runTerminal();
+    if (done) return;
+    await runBoot();
+    reveal();
+  }
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    reveal();
+  } else {
+    runIntro();
+  }
+
+  // -------- Ex command mode (`:`) --------
+  const cmdLineEl = document.getElementById("vim-cmdline");
+  const cmdInputEl = document.getElementById("vim-cmdline-input");
+  let cmdMode = false;
+  let cmdBuffer = "";
+
+  function enterCmdMode() {
+    cmdMode = true;
+    cmdBuffer = "";
+    if (cmdInputEl) cmdInputEl.textContent = "";
+    if (cmdLineEl) cmdLineEl.hidden = false;
+    (window as any).__vimCmdMode = true;
+  }
+
+  function exitCmdMode() {
+    cmdMode = false;
+    cmdBuffer = "";
+    if (cmdLineEl) cmdLineEl.hidden = true;
+    (window as any).__vimCmdMode = false;
+  }
+
+  const fileAliases: Record<string, string> = {
+    "readme":           "/readme",
+    "readme.md":        "/readme",
+    "about":            "/readme",
+    "research":         "/research",
+    "research.bib":     "/research",
+    "publications":     "/research",
+    "publications.bib": "/research",
+    "pubs":             "/research",
+    "preprints":        "/research",
+    "projects":         "/projects",
+    "projects.md":      "/projects",
+    "blogs":            "/blogs",
+    "blogs.md":         "/blogs",
+    "blog":             "/blogs",
+    "notes":            "/blogs",
+    "help":             "/help",
+    "help.txt":         "/help",
+  };
+
+  const exCommands: Record<string, () => void> = {
+    "q":         () => nav("/"),
+    "quit":      () => nav("/"),
+    "home":      () => nav("/"),
+    "dashboard": () => nav("/"),
+    "alpha":     () => nav("/"),
+    "cv":        () => nav("/cv/cv.pdf", { download: true }),
+    "gh":        () => nav("https://github.com/peterwisu", { external: true }),
+    "github":    () => nav("https://github.com/peterwisu", { external: true }),
+    "help":      () => nav("/help"),
+    "h":         () => nav("/help"),
+    "telescope": () => window.dispatchEvent(new CustomEvent("vim:telescope-open")),
+    "tel":       () => window.dispatchEvent(new CustomEvent("vim:telescope-open")),
+    "ff":        () => window.dispatchEvent(new CustomEvent("vim:telescope-open")),
+  };
+
+  function nav(url: string, opts?: { download?: boolean; external?: boolean }) {
+    const fn = (window as any).__navigateTo;
+    if (typeof fn === "function") { fn(url, opts); return; }
+    if (opts?.external) { window.open(url, "_blank", "noopener,noreferrer"); return; }
+    location.href = url;
+  }
+
+  function executeCmd(raw: string) {
+    const cmd = raw.trim().toLowerCase();
+    if (!cmd) return;
+    if (cmd in exCommands) { exCommands[cmd](); return; }
+    const editMatch = cmd.match(/^(e|edit)\s+(.+)$/);
+    if (editMatch) {
+      const target = editMatch[2].trim();
+      if (target in fileAliases) { nav(fileAliases[target]); return; }
+    }
+    if (cmd in fileAliases) { nav(fileAliases[cmd]); return; }
+    // Silent fail on dashboard (no toast UI here)
+  }
+
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (!done) return; // intro still playing
+      const t = e.target;
+      if (t instanceof HTMLElement &&
+          (["INPUT","TEXTAREA","SELECT"].includes(t.tagName) || t.isContentEditable)) return;
+
+      if (cmdMode) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (e.key === "Escape")    { exitCmdMode(); return; }
+        if (e.key === "Enter")     { const c = cmdBuffer; exitCmdMode(); executeCmd(c); return; }
+        if (e.key === "Backspace") {
+          cmdBuffer = cmdBuffer.slice(0, -1);
+          if (cmdInputEl) cmdInputEl.textContent = cmdBuffer;
+          return;
+        }
+        if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+          cmdBuffer += e.key;
+          if (cmdInputEl) cmdInputEl.textContent = cmdBuffer;
+        }
+        return;
+      }
+
+      if (e.key === ":" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        enterCmdMode();
+      }
+    },
+    { capture: true }
+  );
+
+  // -------- Selection nav (j/k, arrows, enter/l) --------
+  const dashItems = Array.from(document.querySelectorAll<HTMLAnchorElement>(".dash-item"));
+  let selected = 0;
+
+  function applySelection() {
+    dashItems.forEach((el, i) => el.classList.toggle("is-selected", i === selected));
+  }
+
+  function move(delta: number) {
+    if (dashItems.length === 0) return;
+    selected = (selected + delta + dashItems.length) % dashItems.length;
+    applySelection();
+    dashItems[selected]?.scrollIntoView({ block: "nearest" });
+  }
+
+  function activate() {
+    dashItems[selected]?.click();
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (!done) return; // intro still playing
+    if (dashItems.length === 0) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.defaultPrevented) return;
+    const t = e.target;
+    if (t instanceof HTMLElement) {
+      if (["INPUT","TEXTAREA","SELECT"].includes(t.tagName) || t.isContentEditable) return;
+    }
+
+    switch (e.key) {
+      case "j":
+      case "ArrowDown":
+        e.preventDefault();
+        move(1);
+        break;
+      case "k":
+      case "ArrowUp":
+        e.preventDefault();
+        move(-1);
+        break;
+      case "Enter":
+      case "l":
+      case "ArrowRight":
+        e.preventDefault();
+        activate();
+        break;
+    }
+  });
+
+  dashItems.forEach((el, i) => {
+    el.addEventListener("mouseenter", () => {
+      selected = i;
+      applySelection();
+    });
+  });
+
+  applySelection();
+</script>

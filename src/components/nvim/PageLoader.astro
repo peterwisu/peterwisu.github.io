@@ -1,0 +1,125 @@
+---
+// Centered "opening file" loader. Only active on the landing page —
+// once you're inside an editor view, navigating between buffers is instant.
+---
+
+<div
+  id="page-loader"
+  class="fixed inset-0 items-center justify-center pointer-events-none"
+  style="display: none; z-index: 10000; background-color: rgba(0, 0, 0, 0.55);"
+  aria-hidden="true"
+>
+  <div class="text-center">
+    <div
+      id="page-loader-label"
+      class="text-blue tn-glow font-mono text-sm mb-4 tracking-wider"
+    >Loading…</div>
+    <div
+      class="mx-auto bg-bg-dark rounded-full overflow-hidden border border-border"
+      style="width: 360px; max-width: 80vw; height: 10px;"
+    >
+      <div
+        id="page-loader-bar"
+        style="
+          width: 0;
+          height: 100%;
+          background-color: var(--tn-blue);
+          box-shadow: 0 0 8px var(--tn-blue), 0 0 14px var(--tn-blue);
+          border-radius: inherit;
+        "
+      ></div>
+    </div>
+    <div
+      id="page-loader-percent"
+      class="text-comment font-mono text-xs mt-3 tracking-widest"
+    >0%</div>
+  </div>
+</div>
+
+<script>
+  const loaderEl     = document.getElementById("page-loader");
+  const loaderBar    = document.getElementById("page-loader-bar") as HTMLElement | null;
+  const loaderLabel  = document.getElementById("page-loader-label");
+  const loaderPct    = document.getElementById("page-loader-percent");
+
+  const ON_LANDING = location.pathname === "/" || location.pathname === "/index.html";
+  const ANIM_MS = 2700;
+
+  const labelFor: Record<string, string> = {
+    "/":         "home (dashboard)",
+    "/readme":   "README.md",
+    "/research": "research.bib",
+    "/projects": "projects.md",
+    "/blogs":    "blogs/",
+    "/help":     "help.txt",
+  };
+
+  let isNavigating = false;
+
+  function showLoader(targetUrl: string) {
+    if (!loaderEl || !loaderBar) return;
+    const label = labelFor[targetUrl] ?? targetUrl;
+    if (loaderLabel) loaderLabel.textContent = `Opening ${label}…`;
+    if (loaderPct)   loaderPct.textContent   = "0%";
+
+    loaderEl.style.display = "flex";
+    loaderBar.style.transition = "none";
+    loaderBar.style.width = "0%";
+    void loaderBar.offsetHeight;
+    loaderBar.style.transition =
+      `width ${ANIM_MS}ms cubic-bezier(0.2, 0.7, 0.05, 1)`;
+    loaderBar.style.width = "100%";
+
+    // Tick the percent text alongside the bar
+    const start = performance.now();
+    function tick(now: number) {
+      const t = Math.min(1, (now - start) / ANIM_MS);
+      // Match the easing curve used by the bar (visual approximation)
+      const eased = 1 - Math.pow(1 - t, 3);
+      if (loaderPct) loaderPct.textContent = `${Math.round(eased * 100)}%`;
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function navigateTo(
+    url: string,
+    opts: { download?: boolean; external?: boolean } = {}
+  ) {
+    if (opts.external) {
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (opts.download) {
+      // Downloads don't change the page — skip the loader.
+      const a = document.createElement("a");
+      a.href = url; a.download = "";
+      document.body.appendChild(a); a.click(); a.remove();
+      return;
+    }
+    if (isNavigating) return;
+    isNavigating = true;
+    showLoader(url);
+    setTimeout(() => { location.href = url; }, ANIM_MS + 60);
+  }
+
+  if (ON_LANDING) {
+    (window as any).__navigateTo = navigateTo;
+
+    document.addEventListener("click", (e) => {
+      if (e.defaultPrevented) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (e.button !== undefined && e.button !== 0) return;
+      const a = (e.target as HTMLElement | null)?.closest("a[href]") as HTMLAnchorElement | null;
+      if (!a) return;
+      if (a.target === "_blank") return;
+      if (a.hasAttribute("download")) return;
+      const href = a.getAttribute("href");
+      if (!href) return;
+      if (href.startsWith("http") || href.startsWith("mailto:") || href === "#") return;
+      if (href === location.pathname) return;
+      e.preventDefault();
+      navigateTo(href);
+    });
+  }
+</script>
