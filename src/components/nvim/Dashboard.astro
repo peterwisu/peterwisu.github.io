@@ -54,7 +54,7 @@ const itemStagger = 55;
   class="dashboard-pending relative flex h-full flex-col items-center justify-center px-6 py-12 select-none"
 >
   <div
-    class="vim-tildes absolute left-0 top-0 bottom-0 pt-3 pl-4 pointer-events-none overflow-hidden dash-enter"
+    class="vim-tildes hidden md:block absolute left-0 top-0 bottom-0 pt-3 pl-4 pointer-events-none overflow-hidden dash-enter"
     style="animation-delay: 80ms;"
     aria-hidden="true"
   >
@@ -95,7 +95,7 @@ const itemStagger = 55;
   </div>
 
   <div
-    class="mt-4 text-comment text-[10px] dash-enter"
+    class="mt-4 text-comment text-[10px] dash-enter hidden md:block"
     style={`animation-delay: ${itemBaseDelay + items.length * itemStagger + 280}ms`}
   >
     j/k or ↑/↓ to navigate · enter or l to open · SPC for leader · : for command

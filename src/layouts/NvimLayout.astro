@@ -41,9 +41,26 @@ const tildeCount = 60;
   </head>
   <body class="bg-bg text-fg font-mono">
     <ScanlinesOverlay />
+    <button
+      id="tree-toggle"
+      type="button"
+      aria-label="Toggle file tree"
+      aria-expanded="false"
+      class="md:hidden fixed top-2 left-2 z-40 bg-bg-dark border border-border rounded px-2.5 py-1 text-fg font-mono text-base leading-none shadow-lg hover:bg-bg-highlight"
+    >≡</button>
+
+    <div
+      id="tree-backdrop"
+      class="md:hidden fixed inset-0 bg-black/55 z-30"
+      hidden
+    ></div>
+
     <div class="flex h-screen flex-col">
       <div class="flex flex-1 overflow-hidden">
-        <aside class="w-[280px] shrink-0 bg-bg-dark border-r border-border overflow-y-auto">
+        <aside
+          id="file-tree-aside"
+          class="bg-bg-dark border-r border-border overflow-y-auto fixed inset-y-0 left-0 z-40 w-[280px] -translate-x-full transition-transform duration-200 ease-out md:static md:translate-x-0 md:shrink-0 md:transition-none"
+        >
           <FileTree activeFile={activeFile} />
         </aside>
         <main class="flex-1 overflow-auto">
@@ -59,7 +76,7 @@ const tildeCount = 60;
     <div
       id="vim-cmdline"
       hidden
-      class="fixed left-0 right-0 z-30 bg-bg-dark border-t border-border px-3 py-1 font-mono text-sm"
+      class="fixed left-0 right-0 z-50 bg-bg-dark border-t border-border px-3 py-1 font-mono text-sm"
       style="bottom: 28px;"
     >
       <span class="text-red font-bold mr-3 text-xs">COMMAND</span>
@@ -69,7 +86,7 @@ const tildeCount = 60;
 
     <div
       id="vim-toast"
-      class="fixed left-0 right-0 z-30 bg-bg-dark border-t border-border px-3 py-1 font-mono text-xs"
+      class="fixed left-0 right-0 z-50 bg-bg-dark border-t border-border px-3 py-1 font-mono text-xs"
       style="bottom: 28px; display: none; transition: opacity 280ms ease-out;"
     >
       <span id="vim-toast-text" class="text-red"></span>
@@ -494,6 +511,49 @@ const tildeCount = 60;
       // Initial render
       applyBufCursor();
       applyTreeSelection();
+    </script>
+
+    <script>
+      // Mobile drawer for the file tree (md and below). On desktop the tree is
+      // statically positioned and these handlers are inert.
+      const treeAside    = document.getElementById("file-tree-aside");
+      const treeToggle   = document.getElementById("tree-toggle");
+      const treeBackdrop = document.getElementById("tree-backdrop");
+
+      function openDrawer() {
+        if (!treeAside || !treeBackdrop || !treeToggle) return;
+        treeAside.classList.remove("-translate-x-full");
+        treeAside.classList.add("translate-x-0");
+        treeBackdrop.hidden = false;
+        treeToggle.setAttribute("aria-expanded", "true");
+      }
+
+      function closeDrawer() {
+        if (!treeAside || !treeBackdrop || !treeToggle) return;
+        treeAside.classList.add("-translate-x-full");
+        treeAside.classList.remove("translate-x-0");
+        treeBackdrop.hidden = true;
+        treeToggle.setAttribute("aria-expanded", "false");
+      }
+
+      treeToggle?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isOpen = treeToggle.getAttribute("aria-expanded") === "true";
+        if (isOpen) closeDrawer(); else openDrawer();
+      });
+
+      treeBackdrop?.addEventListener("click", closeDrawer);
+
+      // Close when a tree link is tapped (so the user sees the new page).
+      treeAside?.querySelectorAll("a").forEach((a) => {
+        a.addEventListener("click", () => closeDrawer());
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && treeToggle?.getAttribute("aria-expanded") === "true") {
+          closeDrawer();
+        }
+      });
     </script>
   </body>
 </html>

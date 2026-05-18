@@ -23,13 +23,13 @@ const fileName = activeFile.startsWith("/") ? activeFile.replace(/^\//, "") + ".
   <div class={`${m.bg} text-bg font-bold px-3 flex items-center`}>
     <span class="tracking-wider">{mode}</span>
   </div>
-  <span class={`${m.arrow} bg-bg-highlight flex items-center pl-0.5`}>▶</span>
+  <span class={`${m.arrow} bg-bg-dark md:bg-bg-highlight flex items-center pl-0.5`}>▶</span>
 
-  <div class="bg-bg-highlight text-fg-dark px-3 flex items-center gap-1.5">
+  <div class="bg-bg-highlight text-fg-dark px-3 hidden md:flex items-center gap-1.5">
     <span class="text-purple">⎇</span>
     <span>main</span>
   </div>
-  <span class="text-bg-highlight bg-bg-dark flex items-center pl-0.5">▶</span>
+  <span class="text-bg-highlight bg-bg-dark hidden md:flex items-center pl-0.5">▶</span>
 
   <div class="bg-bg-dark text-fg-dark px-3 flex items-center gap-1.5">
     <span class="text-blue">M</span>
@@ -37,23 +37,23 @@ const fileName = activeFile.startsWith("/") ? activeFile.replace(/^\//, "") + ".
   </div>
   <span class="text-bg-dark bg-bg flex items-center pl-0.5">▶</span>
 
-  <div class="bg-bg text-comment px-3 flex items-center gap-3">
+  <div class="bg-bg text-comment px-3 hidden md:flex items-center gap-3">
     <span class="flex items-center gap-1"><span class="text-red">●</span><span data-diag="errors">0</span></span>
     <span class="flex items-center gap-1"><span class="text-yellow">▲</span><span data-diag="warnings">0</span></span>
   </div>
 
   <div class="flex-1 bg-bg"></div>
 
-  <span class="text-bg-dark bg-bg flex items-center pr-0.5">◀</span>
-  <div class="bg-bg-dark text-fg-dark px-3 flex items-center">{fileType}</div>
+  <span class="text-bg-dark bg-bg hidden md:flex items-center pr-0.5">◀</span>
+  <div class="bg-bg-dark text-fg-dark px-3 hidden md:flex items-center">{fileType}</div>
 
-  <span class="text-bg-highlight bg-bg-dark flex items-center pr-0.5">◀</span>
-  <div class="bg-bg-highlight text-fg-dark px-3 flex items-center">utf-8[unix]</div>
+  <span class="text-bg-highlight bg-bg-dark hidden md:flex items-center pr-0.5">◀</span>
+  <div class="bg-bg-highlight text-fg-dark px-3 hidden md:flex items-center">utf-8[unix]</div>
 
-  <span class={`${m.arrow} bg-bg-highlight flex items-center pr-0.5`}>◀</span>
-  <div class={`${m.bg} text-bg font-bold px-3 flex items-center`}>3:1</div>
+  <span class={`${m.arrow} bg-bg-highlight hidden md:flex items-center pr-0.5`}>◀</span>
+  <div class={`${m.bg} text-bg font-bold px-3 hidden md:flex items-center`}>3:1</div>
 
-  <div class={`${m.bg} text-bg font-bold px-3 flex items-center border-l border-bg/30`}>12%</div>
+  <div class={`${m.bg} text-bg font-bold px-3 hidden md:flex items-center border-l border-bg/30`}>12%</div>
 
   <div class="relative flex">
     <button
