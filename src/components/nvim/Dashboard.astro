@@ -1,5 +1,6 @@
 ---
 import AsciiLogo from "./AsciiLogo.astro";
+import { SITE_CONFIG } from "../../config";
 
 interface Item {
   icon: string;
@@ -13,9 +14,13 @@ interface Item {
 const items: Item[] = [
   { icon: "→", label: "About",        keys: "SPC a", href: "/readme" },
   { icon: "≡", label: "Research",     keys: "SPC p", href: "/research" },
-  { icon: "λ", label: "Projects",     keys: "SPC P", href: "/projects" },
-  { icon: "✎", label: "Blog",         keys: "SPC n", href: "/blogs" },
-  { icon: "↓", label: "CV (download)", keys: "SPC c", href: "/cv/cv.pdf", download: true },
+  ...(SITE_CONFIG.showProjects
+    ? [{ icon: "λ", label: "Projects", keys: "SPC P", href: "/projects" } as Item]
+    : []),
+  ...(SITE_CONFIG.showBlog
+    ? [{ icon: "✎", label: "Blog", keys: "SPC n", href: "/blogs" } as Item]
+    : []),
+  { icon: "↗", label: "CV (view)", keys: "SPC c", href: "/cv" },
   { icon: "⌬", label: "GitHub",       keys: "SPC g", href: "https://github.com/peterwisu", external: true },
   { icon: "?", label: "Help",         keys: "SPC h", href: "/help" },
 ];
@@ -363,7 +368,7 @@ const itemStagger = 55;
     "home":      () => nav("/"),
     "dashboard": () => nav("/"),
     "alpha":     () => nav("/"),
-    "cv":        () => nav("/cv/cv.pdf", { download: true }),
+    "cv":        () => nav("/cv"),
     "gh":        () => nav("https://github.com/peterwisu", { external: true }),
     "github":    () => nav("https://github.com/peterwisu", { external: true }),
     "help":      () => nav("/help"),

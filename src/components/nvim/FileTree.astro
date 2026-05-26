@@ -18,14 +18,18 @@ interface Entry {
 const tree: Entry[] = [
   { name: "README.md", path: "/readme", type: "file", ext: "md" },
   { name: "research.bib", path: "/research", type: "file", ext: "bib" },
-  { name: "projects.md", path: "/projects", type: "file", ext: "md" },
-  {
-    name: "blogs",
-    type: "folder",
-    children: [
-      { name: "hello-world.md", path: "/blogs", type: "file", ext: "md" },
-    ],
-  },
+  ...(SITE_CONFIG.showProjects
+    ? [{ name: "projects.md", path: "/projects", type: "file" as const, ext: "md" }]
+    : []),
+  ...(SITE_CONFIG.showBlog
+    ? [{
+        name: "blogs",
+        type: "folder" as const,
+        children: [
+          { name: "hello-world.md", path: "/blogs", type: "file" as const, ext: "md" },
+        ],
+      }]
+    : []),
   ...(SITE_CONFIG.showGames
     ? [{
         name: "games",

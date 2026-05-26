@@ -35,14 +35,21 @@
 </div>
 
 <script>
+  import { SITE_CONFIG } from "../../config";
+
   interface Item { name: string; path: string; subtitle?: string; }
 
   const items: Item[] = [
     { name: "α home (dashboard)", path: "/" },
-    { name: "README.md",          path: "/readme",   subtitle: "About me, CV download, contact" },
+    { name: "README.md",          path: "/readme",   subtitle: "About me, contact" },
     { name: "research.bib",       path: "/research", subtitle: "Preprints and publications" },
-    { name: "projects.md",        path: "/projects", subtitle: "Research code and experiments" },
-    { name: "blogs/",             path: "/blogs",    subtitle: "Short-form writing and notes" },
+    ...(SITE_CONFIG.showProjects
+      ? [{ name: "projects.md", path: "/projects", subtitle: "Research code and experiments" }]
+      : []),
+    ...(SITE_CONFIG.showBlog
+      ? [{ name: "blogs/", path: "/blogs", subtitle: "Short-form writing and notes" }]
+      : []),
+    { name: "cv.pdf",             path: "/cv",       subtitle: "Embedded CV preview" },
     { name: "help.txt",           path: "/help",     subtitle: "Keybinding reference" },
   ];
 

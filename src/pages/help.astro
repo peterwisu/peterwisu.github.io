@@ -1,14 +1,15 @@
 ---
 import NvimLayout from "../layouts/NvimLayout.astro";
+import { SITE_CONFIG } from "../config";
 
 interface Row { key: string; desc: string; }
 
 const leader: Row[] = [
   { key: "SPC a",     desc: "Open About (README.md)" },
   { key: "SPC p",     desc: "Open Research (preprints + publications)" },
-  { key: "SPC P",     desc: "Open Projects" },
-  { key: "SPC n",     desc: "Open Blog" },
-  { key: "SPC c",     desc: "Download CV" },
+  ...(SITE_CONFIG.showProjects ? [{ key: "SPC P", desc: "Open Projects" }] : []),
+  ...(SITE_CONFIG.showBlog     ? [{ key: "SPC n", desc: "Open Blog" }] : []),
+  { key: "SPC c",     desc: "Open CV preview page" },
   { key: "SPC g",     desc: "Open GitHub (peterwisu)" },
   { key: "SPC h",     desc: "Open Help" },
   { key: "SPC d",     desc: "Back to Home (dashboard)" },
@@ -37,15 +38,20 @@ const focus: Row[] = [
   { key: "click on buffer", desc: "Also focuses buffer" },
 ];
 
+const shorthandTargets = ["readme", "research"]
+  .concat(SITE_CONFIG.showProjects ? ["projects"] : [])
+  .concat(SITE_CONFIG.showBlog ? ["blogs"] : [])
+  .join(", :");
+
 const ex: Row[] = [
   { key: ":q  /  :quit  /  :home  /  :dashboard  /  :alpha", desc: "Back to / (home)" },
   { key: ":e readme  /  :e about",   desc: "Open README.md" },
   { key: ":e research  /  :e publications  /  :e pubs", desc: "Open research.bib" },
-  { key: ":e projects",              desc: "Open projects.md" },
-  { key: ":e blogs  /  :e blog",     desc: "Open blogs/" },
+  ...(SITE_CONFIG.showProjects ? [{ key: ":e projects",          desc: "Open projects.md" }] : []),
+  ...(SITE_CONFIG.showBlog     ? [{ key: ":e blogs  /  :e blog", desc: "Open blogs/" }] : []),
   { key: ":e help  /  :help  /  :h", desc: "Open this file" },
-  { key: ":readme, :research, :projects, :blogs, …", desc: "Shorthand without :e" },
-  { key: ":cv",                      desc: "Trigger CV download" },
+  { key: `:${shorthandTargets}, …`,  desc: "Shorthand without :e" },
+  { key: ":cv",                      desc: "Open CV preview page" },
   { key: ":gh / :github",            desc: "Open github.com/peterwisu" },
   { key: ":set number  /  :set nu",  desc: "Show line numbers" },
   { key: ":set nonumber  /  :set nonu", desc: "Hide line numbers" },

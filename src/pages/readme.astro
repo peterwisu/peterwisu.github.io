@@ -54,19 +54,14 @@ const SOCIAL_LABEL: Record<string, string> = {
     {about.cv && (
       <>
         <h2>CV</h2>
-        <p>A one-page summary of my education, research experience, and selected work.</p>
         <p>
           <a
-            href={about.cv}
-            download
+            href="/cv"
             class="inline-flex items-center gap-2 rounded bg-blue px-4 py-2 font-bold hover:bg-cyan transition"
             style="color: #ffffff; text-decoration: none;"
           >
-            ↓ Download CV (PDF)
+            ↗ View CV
           </a>
-        </p>
-        <p class="text-comment text-xs italic mt-2">
-          Drop the PDF at <code>public/cv/cv.pdf</code> and this button will deliver it.
         </p>
       </>
     )}

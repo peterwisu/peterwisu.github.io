@@ -1,0 +1,84 @@
+---
+import { getEntry } from "astro:content";
+import NvimLayout from "../layouts/NvimLayout.astro";
+
+const aboutEntry = await getEntry("about", "index");
+const cvHref = aboutEntry?.data.cv ?? "/cv/cv.pdf";
+
+const PDFJS_VERSION = "4.7.76";
+const PDFJS_BASE = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build`;
+---
+
+<NvimLayout activeFile="/cv" fileType="pdf" mode="NORMAL" title="Wish | CV">
+  <article class="buffer-prose" style="max-width: 1100px;">
+    <div class="flex items-center justify-between flex-wrap gap-3" style="margin-bottom: 2rem;">
+      <h1 style="margin-bottom: 0;">Curriculum Vitae</h1>
+      <a
+        href={cvHref}
+        download
+        class="inline-flex items-center gap-2 rounded bg-blue px-4 py-2 font-bold hover:bg-cyan transition"
+        style="color: #ffffff; text-decoration: none;"
+      >
+        ↓ Download PDF
+      </a>
+    </div>
+
+    <div
+      id="cv-viewer"
+      class="rounded border border-border bg-bg-dark overflow-auto p-4 flex flex-col items-center gap-4"
+      style="height: 85vh; min-height: 600px;"
+      data-pdf-url={cvHref}
+      data-pdfjs-base={PDFJS_BASE}
+    >
+      <div id="cv-status" class="text-comment text-sm py-8">Loading CV…</div>
+    </div>
+  </article>
+
+  <script type="module" define:vars={{ cvHref, PDFJS_BASE }}>
+    const viewer = document.getElementById("cv-viewer");
+    const status = document.getElementById("cv-status");
+    if (!viewer || !status) {
+      // page structure changed — bail
+    } else {
+      try {
+        const mod = await import(`${PDFJS_BASE}/pdf.min.mjs`);
+        const pdfjsLib = mod;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_BASE}/pdf.worker.min.mjs`;
+
+        const loadingTask = pdfjsLib.getDocument(cvHref);
+        const pdf = await loadingTask.promise;
+
+        status.remove();
+
+        const containerWidth = viewer.clientWidth - 32; // account for padding
+        const dpr = window.devicePixelRatio || 1;
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const baseViewport = page.getViewport({ scale: 1 });
+          const scale = Math.min(containerWidth / baseViewport.width, 2);
+          const viewport = page.getViewport({ scale: scale * dpr });
+
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.style.width = `${viewport.width / dpr}px`;
+          canvas.style.height = `${viewport.height / dpr}px`;
+          canvas.style.maxWidth = "100%";
+          canvas.style.boxShadow = "0 4px 12px rgba(0,0,0,0.4)";
+          canvas.style.background = "#ffffff";
+          viewer.appendChild(canvas);
+
+          await page.render({
+            canvasContext: canvas.getContext("2d"),
+            viewport,
+          }).promise;
+        }
+      } catch (err) {
+        status.textContent = `Could not render CV: ${err?.message ?? err}`;
+        status.classList.add("text-red");
+        console.error(err);
+      }
+    }
+  </script>
+</NvimLayout>
