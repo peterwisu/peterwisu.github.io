@@ -24,6 +24,8 @@ const SOCIAL_LABEL: Record<string, string> = {
 
 <BaseLayout title="About">
   <article class="prose">
+    <h1>About me</h1>
+
     {about.avatar && (
       <img
         src={about.avatar}
@@ -35,8 +37,6 @@ const SOCIAL_LABEL: Record<string, string> = {
         style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; margin-bottom: 1.75rem;"
       />
     )}
-
-    <h1>About me</h1>
 
     <Content />
 

@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import { getEntry } from "astro:content";
 
 interface Props {
@@ -12,8 +13,6 @@ const aboutEntry = await getEntry("about", "index");
 const about = aboutEntry?.data;
 const name = about?.name ?? "Wish (Peter) Suharitdamrong";
 const role = about?.title;
-const cv = about?.cv;
-const social = about?.social ?? [];
 
 const pageTitle = title ? `${name.split(" ")[0]} | ${title}` : name;
 
@@ -26,13 +25,6 @@ const nav = [
 
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
 const isActive = (href: string) => path === href || path.startsWith(href + "/");
-
-const SOCIAL_LABEL: Record<string, string> = {
-  github: "GitHub",
-  x: "X",
-  twitter: "X",
-  linkedin: "LinkedIn",
-};
 ---
 
 <html lang="en">
@@ -42,6 +34,7 @@ const SOCIAL_LABEL: Record<string, string> = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <title>{pageTitle}</title>
+    <ClientRouter />
     <script is:inline>
       // Default light; switch to dark only when explicitly stored.
       try {
@@ -79,16 +72,11 @@ const SOCIAL_LABEL: Record<string, string> = {
           </nav>
         </div>
 
-        <!-- Sidebar footer: meta links + theme toggle -->
-        <div class="mt-7 md:mt-0 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {cv && <a href="/cv" class="meta-link">CV</a>}
-          {social.map((s) => (
-            <a href={s.url} target="_blank" rel="noopener noreferrer" class="meta-link">
-              {SOCIAL_LABEL[s.platform] ?? s.platform}
-            </a>
-          ))}
-          <button id="theme-toggle" type="button" class="theme-toggle" aria-label="Toggle dark mode">
-            <span data-theme-label>Dark</span>
+        <!-- Sidebar footer: theme toggle -->
+        <div class="mt-7 md:mt-0">
+          <button id="theme-toggle" type="button" class="theme-toggle" aria-label="Toggle dark or light mode">
+            <span data-theme-icon aria-hidden="true">☾</span>
+            <span data-theme-label>Dark mode</span>
           </button>
         </div>
       </aside>
@@ -100,18 +88,26 @@ const SOCIAL_LABEL: Record<string, string> = {
     </div>
 
     <script>
-      const btn = document.getElementById("theme-toggle");
-      const label = btn?.querySelector("[data-theme-label]");
-      const sync = () => {
-        const dark = document.documentElement.classList.contains("dark");
-        if (label) label.textContent = dark ? "Light" : "Dark";
-      };
-      sync();
-      btn?.addEventListener("click", () => {
-        const dark = document.documentElement.classList.toggle("dark");
-        try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (_) {}
+      // Rebind on every page load — `astro:page-load` fires on first load and
+      // after each View Transition navigation (when the body is swapped).
+      function initThemeToggle() {
+        const btn = document.getElementById("theme-toggle");
+        const label = btn?.querySelector("[data-theme-label]");
+        const icon = btn?.querySelector("[data-theme-icon]");
+        const sync = () => {
+          const dark = document.documentElement.classList.contains("dark");
+          // Show the mode you'll switch *to*, so the action is clear.
+          if (label) label.textContent = dark ? "Light mode" : "Dark mode";
+          if (icon) icon.textContent = dark ? "☀" : "☾";
+        };
         sync();
-      });
+        btn?.addEventListener("click", () => {
+          const dark = document.documentElement.classList.toggle("dark");
+          try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch (_) {}
+          sync();
+        });
+      }
+      document.addEventListener("astro:page-load", initThemeToggle);
     </script>
   </body>
 </html>

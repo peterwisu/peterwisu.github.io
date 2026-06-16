@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
 import { getEntry } from "astro:content";
 
 const aboutEntry = await getEntry("about", "index");
@@ -15,6 +16,7 @@ const role = about?.title;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <title>{name}</title>
+    <ClientRouter />
     <script is:inline>
       try {
         if (localStorage.getItem("theme") === "dark")
