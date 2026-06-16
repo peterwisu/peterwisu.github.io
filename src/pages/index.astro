@@ -1,10 +1,11 @@
 ---
 import "../styles/global.css";
-import Dashboard from "../components/nvim/Dashboard.astro";
-import StatusBar from "../components/nvim/StatusBar.astro";
-import ScanlinesOverlay from "../components/nvim/ScanlinesOverlay.astro";
-import TelescopeModal from "../components/nvim/TelescopeModal.astro";
-import PageLoader from "../components/nvim/PageLoader.astro";
+import { getEntry } from "astro:content";
+
+const aboutEntry = await getEntry("about", "index");
+const about = aboutEntry?.data;
+const name = about?.name ?? "Wish (Peter) Suharitdamrong";
+const role = about?.title;
 ---
 
 <html lang="en">
@@ -13,24 +14,32 @@ import PageLoader from "../components/nvim/PageLoader.astro";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
-    <title>Wish | Home</title>
+    <title>{name}</title>
     <script is:inline>
       try {
-        var t = localStorage.getItem("theme");
-        if (t === "light") document.documentElement.classList.add("light");
-        else if (t === "storm") document.documentElement.classList.add("storm");
+        if (localStorage.getItem("theme") === "dark")
+          document.documentElement.classList.add("dark");
       } catch (_) {}
     </script>
   </head>
-  <body class="bg-bg text-fg font-mono">
-    <PageLoader />
-    <ScanlinesOverlay />
-    <div class="flex h-screen flex-col">
-      <div class="flex-1 overflow-auto">
-        <Dashboard />
-      </div>
-      <StatusBar mode="NORMAL" fileType="dashboard" activeFile="home" />
-    </div>
-    <TelescopeModal />
+  <body class="bg-bg text-fg">
+    <main class="min-h-screen flex flex-col items-center justify-center text-center px-6">
+      <h1
+        class="font-semibold text-fg"
+        style="text-transform: uppercase; letter-spacing: 0.06em; font-size: clamp(1.5rem, 4vw, 2.4rem); line-height: 1.2;"
+      >
+        {name}
+      </h1>
+      {role && (
+        <p class="text-comment mt-3" style="letter-spacing: 0.08em; font-size: 0.85rem;">{role}</p>
+      )}
+      <a
+        href="/about"
+        class="mt-12 inline-block no-underline border-b border-fg pb-1 text-fg"
+        style="text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem;"
+      >
+        Enter
+      </a>
+    </main>
   </body>
 </html>

@@ -1,9 +1,9 @@
 ---
-import NvimLayout from "../../layouts/NvimLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
 
-<NvimLayout activeFile="/games/tetris" fileType="javascript" mode="NORMAL" title="Wish | Tetris">
-  <article class="buffer-prose" style="max-width: 720px;">
+<BaseLayout title="Tetris">
+  <article class="prose" style="max-width: 720px;">
     <h1>tetris.js</h1>
     <p class="text-comment">
       A tiny Tetris in vanilla JS. Move with <code>h</code>/<code>l</code> (or arrows), rotate with
@@ -69,7 +69,7 @@ import NvimLayout from "../../layouts/NvimLayout.astro";
       <div><span class="text-yellow">q / Esc</span> back to home</div>
     </div>
   </article>
-</NvimLayout>
+</BaseLayout>
 
 <script>
   // Suppress the layout's global vim keybindings while on this page so hjkl

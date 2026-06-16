@@ -1,9 +1,9 @@
 ---
-import NvimLayout from "../../layouts/NvimLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
 
-<NvimLayout activeFile="/games/blackjack" fileType="javascript" mode="NORMAL" title="Wish | Blackjack">
-  <article class="buffer-prose" style="max-width: 720px;">
+<BaseLayout title="Blackjack">
+  <article class="prose" style="max-width: 720px;">
     <h1>blackjack.js</h1>
     <p class="text-comment">
       Single-deck blackjack against the house. Dealer stands on 17.
@@ -62,7 +62,7 @@ import NvimLayout from "../../layouts/NvimLayout.astro";
       <span class="text-yellow">q / Esc</span> back to home
     </div>
   </article>
-</NvimLayout>
+</BaseLayout>
 
 <style>
   .bj-card {

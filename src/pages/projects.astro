@@ -1,38 +1,46 @@
 ---
 import { getCollection } from "astro:content";
-import NvimLayout from "../layouts/NvimLayout.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE_CONFIG } from "../config";
 
-const projects = (await getCollection("projects", ({ data }) => !data.draft)).sort((a, b) => {
-  const da = a.data.date?.getTime() ?? 0;
-  const db = b.data.date?.getTime() ?? 0;
-  return db - da;
-});
+const projects = SITE_CONFIG.showProjects
+  ? (await getCollection("projects", ({ data }) => !data.draft)).sort((a, b) => {
+      const da = a.data.date?.getTime() ?? 0;
+      const db = b.data.date?.getTime() ?? 0;
+      return db - da;
+    })
+  : [];
 ---
 
-<NvimLayout activeFile="/projects" fileType="python" mode="NORMAL" title="Wish | Projects">
-  <article class="buffer-prose" style="max-width: 920px;">
+<BaseLayout title="Projects">
+  <article class="prose">
     <h1>Projects</h1>
-    <p class="text-comment">Research code, side experiments, and reproductions.</p>
 
-    <div class="grid sm:grid-cols-2 gap-4 mt-8">
-      {projects.map((p) => (
-        <a
-          href={p.data.repo ?? p.data.url ?? "#"}
-          target={(p.data.repo ?? p.data.url) ? "_blank" : undefined}
-          rel="noopener noreferrer"
-          class="block rounded border border-border bg-bg-dark p-5 hover:border-blue hover:bg-bg-highlight transition"
-        >
-          <div class="text-blue font-bold text-base"># {p.data.title}</div>
-          <div class="text-fg-dark text-sm mt-2 leading-relaxed">{p.data.description}</div>
-          {p.data.tech && p.data.tech.length > 0 && (
-            <div class="mt-3 flex gap-2 text-[11px] flex-wrap">
-              {p.data.tech.map((t) => (
-                <span class="text-purple bg-bg-highlight px-2 py-0.5 rounded font-medium">{t}</span>
-              ))}
-            </div>
-          )}
-        </a>
-      ))}
-    </div>
+    {!SITE_CONFIG.showProjects ? (
+      <p class="text-comment">Projects are not available right now.</p>
+    ) : projects.length === 0 ? (
+      <p class="text-comment">No projects yet.</p>
+    ) : (
+      <ul style="list-style: none; padding-left: 0;">
+        {projects.map((p) => (
+          <li style="margin-bottom: 1.6rem;">
+            <a
+              href={p.data.repo ?? p.data.url ?? "#"}
+              target={(p.data.repo ?? p.data.url) ? "_blank" : undefined}
+              rel="noopener noreferrer"
+              style="font-weight: 600;"
+            >
+              {p.data.title}
+            </a>
+            <div class="text-fg-dark" style="font-size: 0.85rem; margin-top: 0.3rem;">{p.data.description}</div>
+            {p.data.tech && p.data.tech.length > 0 && (
+              <div class="text-comment" style="font-size: 0.75rem; margin-top: 0.4rem;">
+                {p.data.tech.join(" · ")}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    )}
   </article>
-</NvimLayout>
+</BaseLayout>

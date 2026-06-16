@@ -1,9 +1,9 @@
 ---
-import NvimLayout from "../../layouts/NvimLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
 
-<NvimLayout activeFile="/games/snake" fileType="javascript" mode="NORMAL" title="Wish | Snake">
-  <article class="buffer-prose" style="max-width: 720px;">
+<BaseLayout title="Snake">
+  <article class="prose" style="max-width: 720px;">
     <h1>snake.js</h1>
     <p class="text-comment">
       The classic. Steer with <code>h</code>/<code>j</code>/<code>k</code>/<code>l</code>
@@ -57,7 +57,7 @@ import NvimLayout from "../../layouts/NvimLayout.astro";
       <div><span class="text-yellow">q / Esc</span> back to home</div>
     </div>
   </article>
-</NvimLayout>
+</BaseLayout>
 
 <script>
   // Suppress the layout's global vim keybindings so hjkl steers the snake

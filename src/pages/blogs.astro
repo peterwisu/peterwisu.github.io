@@ -1,38 +1,36 @@
 ---
 import { getCollection } from "astro:content";
-import NvimLayout from "../layouts/NvimLayout.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE_CONFIG } from "../config";
 
-const posts = (await getCollection("blog", ({ data }) => !data.draft))
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const posts = SITE_CONFIG.showBlog
+  ? (await getCollection("blog", ({ data }) => !data.draft)).sort(
+      (a, b) => b.data.date.getTime() - a.data.date.getTime()
+    )
+  : [];
 
 function fmtDate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 ---
 
-<NvimLayout activeFile="/blogs" fileType="markdown" mode="NORMAL" title="Wish | Blog">
-  <article class="buffer-prose">
+<BaseLayout title="Blog">
+  <article class="prose">
     <h1>Blog</h1>
-    <p class="text-comment">Short-form writing and research notes.</p>
 
-    {posts.length === 0 ? (
-      <p class="text-comment italic mt-8">No posts yet.</p>
+    {!SITE_CONFIG.showBlog ? (
+      <p class="text-comment">The blog is not available right now.</p>
+    ) : posts.length === 0 ? (
+      <p class="text-comment">No posts yet.</p>
     ) : (
-      <ul class="mt-8 space-y-6 list-none pl-0">
+      <ul style="list-style: none; padding-left: 0;">
         {posts.map((p) => (
-          <li>
-            <a href={`/blogs/${p.id}`} class="block group no-underline">
-              <div class="text-comment text-xs font-medium">{fmtDate(p.data.date)}</div>
-              <div class="text-blue group-hover:underline font-medium mt-1">{p.data.title}</div>
+          <li style="margin-bottom: 1.4rem;">
+            <a href={`/blogs/${p.id}`} class="no-underline">
+              <div class="text-comment" style="font-size: 0.75rem;">{fmtDate(p.data.date)}</div>
+              <div style="font-weight: 600; margin-top: 0.2rem;">{p.data.title}</div>
               {p.data.summary && (
-                <div class="text-fg-dark text-sm mt-1 leading-relaxed">{p.data.summary}</div>
-              )}
-              {p.data.tags && p.data.tags.length > 0 && (
-                <div class="mt-2 flex gap-2 text-[11px] flex-wrap">
-                  {p.data.tags.map((t) => (
-                    <span class="text-purple bg-bg-highlight px-2 py-0.5 rounded font-medium">#{t}</span>
-                  ))}
-                </div>
+                <div class="text-fg-dark" style="font-size: 0.85rem; margin-top: 0.2rem;">{p.data.summary}</div>
               )}
             </a>
           </li>
@@ -40,4 +38,4 @@ function fmtDate(d: Date) {
       </ul>
     )}
   </article>
-</NvimLayout>
+</BaseLayout>

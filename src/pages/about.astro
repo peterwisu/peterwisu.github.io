@@ -1,0 +1,101 @@
+---
+import { getCollection, getEntry, render } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const aboutEntry = await getEntry("about", "index");
+if (!aboutEntry) throw new Error("Missing src/content/about/index.md");
+const { Content } = await render(aboutEntry);
+const about = aboutEntry.data;
+
+const news = (await getCollection("news"))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+function fmtNewsDate(d: Date) {
+  return d.toISOString().slice(0, 7); // YYYY-MM
+}
+
+const SOCIAL_LABEL: Record<string, string> = {
+  github: "GitHub",
+  x: "X / Twitter",
+  twitter: "X / Twitter",
+  linkedin: "LinkedIn",
+};
+---
+
+<BaseLayout title="About">
+  <article class="prose">
+    {about.avatar && (
+      <img
+        src={about.avatar}
+        alt={about.name}
+        width="120"
+        height="120"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; margin-bottom: 1.75rem;"
+      />
+    )}
+
+    <h1>About me</h1>
+
+    <Content />
+
+    {about.research_interests.length > 0 && (
+      <>
+        <h2>Research interests</h2>
+        <ul>
+          {about.research_interests.map((r) => <li>{r}</li>)}
+        </ul>
+      </>
+    )}
+
+    {news.length > 0 && (
+      <>
+        <h2>News</h2>
+        <ul style="list-style: none; padding-left: 0;">
+          {news.map((n) => (
+            <li style="display: flex; gap: 1rem; margin: 0.4rem 0;">
+              <span class="text-comment" style="flex-shrink: 0; width: 5rem; font-size: 0.8rem;">{fmtNewsDate(n.data.date)}</span>
+              <span>{n.data.text}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    {about.social.length > 0 && (
+      <>
+        <h2>Elsewhere</h2>
+        <ul style="list-style: none; padding-left: 0;">
+          {about.social.map((s) => (
+            <li style="display: flex; gap: 1rem; margin: 0.3rem 0;">
+              <span class="text-comment" style="flex-shrink: 0; width: 6rem; font-size: 0.8rem;">{SOCIAL_LABEL[s.platform] ?? s.platform}</span>
+              <a href={s.url} target="_blank" rel="noopener noreferrer">{s.handle}</a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    {about.contact.length > 0 && (
+      <>
+        <h2>Contact</h2>
+        <ul style="list-style: none; padding-left: 0;">
+          {about.contact.map((c) => (
+            <li style="display: flex; gap: 1rem; margin: 0.3rem 0;">
+              <span class="text-comment" style="flex-shrink: 0; width: 6rem; font-size: 0.8rem;">{c.label}</span>
+              <a href={c.href}>{c.value}</a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    {about.cv && (
+      <>
+        <h2>CV</h2>
+        <p><a href="/cv">View curriculum vitae →</a></p>
+      </>
+    )}
+  </article>
+</BaseLayout>

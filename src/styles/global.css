@@ -2,12 +2,9 @@
 
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
-@import "@fontsource/jetbrains-mono/700.css";
-@import "@fontsource/space-grotesk/400.css";
-@import "@fontsource/space-grotesk/500.css";
 
-/* Future upgrade path: swap JetBrains Mono for Berkeley Mono here. */
-
+/* Token names are kept (bg, fg, border, blue, …) so existing utility classes
+ * keep resolving — they're just remapped to a minimal monochrome palette. */
 @theme inline {
   --color-bg: var(--tn-bg);
   --color-bg-dark: var(--tn-bg-dark);
@@ -15,426 +12,183 @@
   --color-fg: var(--tn-fg);
   --color-fg-dark: var(--tn-fg-dark);
   --color-comment: var(--tn-comment);
-  --color-blue: var(--tn-blue);
-  --color-purple: var(--tn-purple);
-  --color-green: var(--tn-green);
+  --color-blue: var(--tn-accent);
+  --color-purple: var(--tn-fg-dark);
+  --color-green: var(--tn-fg-dark);
   --color-red: var(--tn-red);
-  --color-yellow: var(--tn-yellow);
-  --color-cyan: var(--tn-cyan);
-  --color-orange: var(--tn-orange);
+  --color-yellow: var(--tn-fg-dark);
+  --color-cyan: var(--tn-accent);
+  --color-orange: var(--tn-fg-dark);
   --color-border: var(--tn-border);
 
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
 }
 
-/* Claude — warm retro orange/brown (DEFAULT) */
+/* Light — DEFAULT */
 :root {
-  --tn-bg: #1a130d;
-  --tn-bg-dark: #110b06;
-  --tn-bg-highlight: #2d2218;
-  --tn-fg: #f0e6d2;
-  --tn-fg-dark: #c7b89c;
-  --tn-comment: #8a7560;
-  --tn-blue: #ea8a3d;       /* signature orange (used wherever "blue" appears) */
-  --tn-purple: #c69384;     /* dusty rose */
-  --tn-green: #b6a749;      /* olive */
-  --tn-red: #d4644b;        /* terracotta */
-  --tn-yellow: #f0b96b;     /* amber */
-  --tn-cyan: #8db18a;       /* sage */
-  --tn-orange: #f59e60;     /* bright warm orange */
-  --tn-border: #2d2218;
-  color-scheme: dark;
-}
-
-/* Tokyo Night Storm (dark blue) */
-:root.storm {
-  --tn-bg: #1a1b26;
-  --tn-bg-dark: #16161e;
-  --tn-bg-highlight: #292e42;
-  --tn-fg: #c0caf5;
-  --tn-fg-dark: #a9b1d6;
-  --tn-comment: #565f89;
-  --tn-blue: #7aa2f7;
-  --tn-purple: #bb9af7;
-  --tn-green: #9ece6a;
-  --tn-red: #f7768e;
-  --tn-yellow: #e0af68;
-  --tn-cyan: #7dcfff;
-  --tn-orange: #ff9e64;
-  --tn-border: #15161e;
-  color-scheme: dark;
-}
-
-/* Tokyo Night Day (light) */
-:root.light {
-  --tn-bg: #e1e2e7;
-  --tn-bg-dark: #d6d8e0;
-  --tn-bg-highlight: #c4c8da;
-  --tn-fg: #3760bf;
-  --tn-fg-dark: #6172b0;
-  --tn-comment: #848cb5;
-  --tn-blue: #2e7de9;
-  --tn-purple: #9854f1;
-  --tn-green: #587539;
-  --tn-red: #f52a65;
-  --tn-yellow: #8c6c3e;
-  --tn-cyan: #007197;
-  --tn-orange: #b15c00;
-  --tn-border: #b6b9c4;
+  --tn-bg: #ffffff;
+  --tn-bg-dark: #f6f6f6;
+  --tn-bg-highlight: #ececec;
+  --tn-fg: #111111;
+  --tn-fg-dark: #555555;
+  --tn-comment: #999999;
+  --tn-accent: #111111;
+  --tn-red: #b3261e;
+  --tn-border: #e4e4e4;
   color-scheme: light;
+}
+
+/* Dark — strict near-black / off-white */
+:root.dark {
+  --tn-bg: #0a0a0a;
+  --tn-bg-dark: #141414;
+  --tn-bg-highlight: #1f1f1f;
+  --tn-fg: #f2f2f2;
+  --tn-fg-dark: #aaaaaa;
+  --tn-comment: #777777;
+  --tn-accent: #f2f2f2;
+  --tn-red: #e06c63;
+  --tn-border: #2a2a2a;
+  color-scheme: dark;
 }
 
 html,
 body {
   background-color: var(--tn-bg);
   color: var(--tn-fg);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  letter-spacing: 0;
   height: 100%;
   margin: 0;
 }
 
-/* Subtle text glow for accent-colored elements */
-.tn-glow {
-  text-shadow: 0 0 8px currentColor;
-  opacity: 0.95;
+/* Smooth the light/dark swap */
+html,
+body,
+a,
+.nav-link,
+.theme-toggle {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
 }
 
-/* Blocky blinking cursor for NORMAL mode */
-.cursor-block {
-  display: inline-block;
-  width: 0.6em;
-  height: 1.1em;
-  background-color: var(--tn-fg);
-  vertical-align: text-bottom;
-  animation: cursor-blink 1.05s steps(1) infinite;
-}
-
-@keyframes cursor-blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
-/* Dashboard entrance + ambient animations */
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes logo-pulse {
-  0%, 100% {
-    text-shadow: 0 0 6px currentColor;
-    filter: brightness(0.95);
-  }
-  50% {
-    text-shadow: 0 0 16px currentColor, 0 0 28px currentColor;
-    filter: brightness(1.08);
-  }
-}
-
-/* Dashboard reveal is gated by .dashboard-ready (boot sequence finishes first) */
-.dashboard-pending .dash-enter {
-  opacity: 0;
-}
-.dashboard-ready .dash-enter {
-  opacity: 0;
-  animation: fade-in-up 380ms ease-out forwards;
-}
-
-.logo-pulse {
-  animation: logo-pulse 3.6s ease-in-out infinite;
-}
-
-/* Selection cursor on the currently active dashboard item */
-.dash-item {
-  position: relative;
-}
-.dash-item .caret {
-  background-color: transparent;
-  display: inline-block;
-}
-.dash-item.is-selected {
-  background-color: var(--tn-bg-highlight);
-}
-.dash-item.is-selected::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background-color: var(--tn-blue);
-  border-radius: 1px;
-}
-.dash-item.is-selected .caret {
-  background-color: var(--tn-blue);
-  animation: cursor-blink 1.05s steps(1) infinite;
-}
-
-/* Terminal pre-boot phase */
-.terminal-cursor {
-  display: inline-block;
-  animation: cursor-blink 1.05s steps(1) infinite;
-}
-
-/* Tree keyboard selection — only visible while the tree is focused (:ex) */
-.tree-focus aside .tree-row.is-selected {
-  background-color: var(--tn-bg-highlight);
-  box-shadow: inset 2px 0 0 var(--tn-blue);
-}
-.tree-focus aside .tree-row.is-selected::after {
-  content: "▌";
-  color: var(--tn-blue);
-  margin-left: auto;
-  padding-left: 0.4rem;
-  animation: cursor-blink 1.05s steps(1) infinite;
-}
-
-/* Buffer cursor — a vim "cursor line" with a blinking left bar */
-.buf-cursor {
-  position: relative;
-}
-.buffer-focus .buf-cursor {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-.buffer-focus .buf-cursor::before {
-  content: "";
-  position: absolute;
-  left: -8px;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background-color: var(--tn-blue);
-  border-radius: 2px;
-  animation: cursor-blink 1.05s steps(1) infinite;
-  pointer-events: none;
-}
-
-/* Vim tildes — fill empty lines below buffer content (or beside the dashboard) */
-.vim-tildes {
-  color: var(--tn-comment);
-  opacity: 0.45;
-  user-select: none;
-  font-family: var(--font-mono);
-  line-height: 1.6;
-  font-size: 0.875rem;
-}
-
-/* Line numbers — toggled by :set number / :set nonumber.
- * Implemented as a JS-managed gutter overlay on the left of <main>, so the
- * article content keeps its centered layout. Numbers and tildes share one
- * right-aligned column. */
-.vim-gutter-num {
-  position: absolute;
-  width: 100%;
-  text-align: right;
-  color: var(--tn-comment);
-  font-family: var(--font-mono);
-  font-size: 0.875em;
-  opacity: 0.65;
-  user-select: none;
-  pointer-events: none;
-}
-
-/* Tildes — right-align each ~ so it lands in the same column as line numbers */
-.vim-tildes > div {
-  width: 2rem;
-  text-align: right;
-}
-
-/* Vim command line */
-#vim-cmdline {
-  font-variant-numeric: tabular-nums;
-}
-#vim-cmdline[hidden] {
-  display: none;
-}
-
-/* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .dashboard-ready .dash-enter,
-  .dash-enter {
-    opacity: 1;
-    animation: none;
-  }
-  .logo-pulse,
-  .terminal-cursor {
-    animation: none;
-  }
-  .dash-item.is-selected .caret {
-    animation: none;
+  * {
+    transition: none !important;
   }
 }
 
-/* CRT scanlines — applied via fixed overlay element. */
-.scanlines {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.03) 0px,
-    rgba(0, 0, 0, 0.03) 1px,
-    transparent 1px,
-    transparent 3px
-  );
-  mix-blend-mode: multiply;
-}
-
-:root.no-crt .scanlines,
-:root.no-crt .tn-glow {
-  display: none;
-  text-shadow: none;
-  opacity: 1;
-}
-
-/* Theme picker popover */
-.theme-picker {
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 150ms ease, transform 150ms ease;
-  pointer-events: none;
-}
-.theme-picker.open {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-.theme-picker-panel {
-  background: var(--tn-bg-dark);
-  border: 1px solid var(--tn-border);
-  border-radius: 4px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  width: 12rem;
-  padding: 0.25rem 0;
-  font-family: var(--font-mono);
-}
-.picker-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.75rem;
+/* ---- Sidebar nav ---- */
+.nav-link {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--tn-fg-dark);
-  background: transparent;
-  cursor: pointer;
+  text-decoration: none;
+  padding: 0.28rem 0;
+}
+.nav-link:hover {
+  color: var(--tn-fg);
+}
+.nav-link[aria-current="page"] {
+  color: var(--tn-fg);
+  font-weight: 600;
+}
+
+.meta-link {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tn-comment);
+  text-decoration: none;
+}
+.meta-link:hover {
+  color: var(--tn-fg);
+}
+
+.theme-toggle {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tn-comment);
+  background: none;
   border: 0;
-  text-align: left;
+  padding: 0;
+  cursor: pointer;
   font-family: inherit;
 }
-.picker-item:hover {
-  background: var(--tn-bg-highlight);
+.theme-toggle:hover {
   color: var(--tn-fg);
 }
-.picker-item[aria-current="true"] {
+
+/* ---- Minimal prose ---- */
+.prose {
+  max-width: 680px;
+  font-size: 0.95rem;
+  line-height: 1.75;
   color: var(--tn-fg);
-  background: var(--tn-bg-highlight);
-}
-.picker-item[aria-current="true"]::before {
-  content: "▸";
-  color: var(--tn-blue);
-  margin-right: -0.25rem;
-}
-.picker-swatch {
-  width: 0.65rem;
-  height: 0.65rem;
-  border-radius: 9999px;
-  flex-shrink: 0;
-  box-shadow: 0 0 8px currentColor;
 }
 
-/* Powerline-style angled separator via clip-path */
-.powerline-right {
-  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
-  padding-right: 14px;
-}
-
-.powerline-left {
-  clip-path: polygon(10px 0, 100% 0, 100% 100%, 10px 100%, 0 50%);
-  padding-left: 14px;
-}
-
-/* Tree indent guides */
-.tree-guide {
-  position: relative;
-}
-.tree-guide::before {
-  content: "";
-  position: absolute;
-  left: 0.4em;
-  top: 0;
-  bottom: 0;
-  border-left: 1px solid var(--tn-bg-highlight);
-}
-
-/* Buffer gutter line numbers (kept for any future raw-source views) */
-.gutter {
-  user-select: none;
-  text-align: right;
-  color: var(--tn-comment);
-  padding-right: 1em;
-}
-
-/* Rendered content prose inside a buffer */
-.buffer-prose {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 2.5rem 2.5rem 4rem;
-  font-family: var(--font-mono);
-  line-height: 1.7;
-}
-
-.buffer-prose h1 {
-  color: var(--tn-fg);
-  font-size: 1.875rem;
+.prose h1 {
+  font-size: 1.4rem;
   font-weight: 700;
-  margin-bottom: 0.25rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 1.5rem;
 }
 
-.buffer-prose h1::before {
-  content: "# ";
-  color: var(--tn-comment);
+.prose h2 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tn-fg-dark);
+  margin: 2.75rem 0 1rem;
 }
 
-.buffer-prose h2 {
+.prose h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1.75rem 0 0.5rem;
+}
+
+.prose p {
+  margin: 0 0 1rem;
+}
+
+.prose a {
   color: var(--tn-fg);
-  font-size: 1.375rem;
-  font-weight: 700;
-  margin-top: 2.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.buffer-prose h2::before {
-  content: "## ";
-  color: var(--tn-comment);
-}
-
-.buffer-prose p {
-  color: var(--tn-fg);
-  margin-top: 0.75rem;
-}
-
-.buffer-prose code {
-  color: var(--tn-cyan);
-  background-color: var(--tn-bg-dark);
-  padding: 0.1em 0.35em;
-  border-radius: 3px;
-  font-size: 0.9em;
-}
-
-.buffer-prose a {
-  color: var(--tn-blue);
   text-decoration: underline;
   text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.prose a:hover {
+  text-decoration-color: var(--tn-comment);
 }
 
-.buffer-prose strong {
-  color: var(--tn-blue);
+.prose strong {
   font-weight: 600;
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--tn-bg-highlight);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+.prose ul {
+  list-style: disc;
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+}
+/* Rows that opt out of bullets (news / social / contact) keep their inline override */
+.prose ul[style*="list-style: none"] {
+  list-style: none;
+}
+.prose li {
+  margin: 0.25rem 0;
 }

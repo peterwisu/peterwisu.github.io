@@ -1,6 +1,6 @@
 ---
 import { getEntry } from "astro:content";
-import NvimLayout from "../layouts/NvimLayout.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 
 const aboutEntry = await getEntry("about", "index");
 const cvHref = aboutEntry?.data.cv ?? "/cv/cv.pdf";
@@ -9,16 +9,11 @@ const PDFJS_VERSION = "4.7.76";
 const PDFJS_BASE = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build`;
 ---
 
-<NvimLayout activeFile="/cv" fileType="pdf" mode="NORMAL" title="Wish | CV">
-  <article class="buffer-prose" style="max-width: 1100px;">
+<BaseLayout title="CV">
+  <article class="prose" style="max-width: 1100px;">
     <div class="flex items-center justify-between flex-wrap gap-3" style="margin-bottom: 2rem;">
       <h1 style="margin-bottom: 0;">Curriculum Vitae</h1>
-      <a
-        href={cvHref}
-        download
-        class="inline-flex items-center gap-2 rounded bg-blue px-4 py-2 font-bold hover:bg-cyan transition"
-        style="color: #ffffff; text-decoration: none;"
-      >
+      <a href={cvHref} download class="meta-link" style="border: 1px solid var(--tn-border); padding: 0.5rem 0.9rem; border-radius: 3px;">
         ↓ Download PDF
       </a>
     </div>
@@ -81,4 +76,4 @@ const PDFJS_BASE = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/bui
       }
     }
   </script>
-</NvimLayout>
+</BaseLayout>
