@@ -14,6 +14,21 @@ function fmtNewsDate(d: Date) {
   return d.toISOString().slice(0, 7); // YYYY-MM
 }
 
+// Group by role so repeated entries read "Reviewer  AAAI 2026 · EMNLP 2026"
+// rather than listing the same role on consecutive lines.
+function groupByRole<T extends { role: string }>(rows: T[], key: keyof T) {
+  const out: { role: string; items: string[] }[] = [];
+  for (const r of rows) {
+    const existing = out.find((g) => g.role === r.role);
+    if (existing) existing.items.push(String(r[key]));
+    else out.push({ role: r.role, items: [String(r[key])] });
+  }
+  return out;
+}
+
+const serviceByRole = groupByRole(about.service, "venue");
+const teachingByRole = groupByRole(about.teaching, "module");
+
 const SOCIAL_LABEL: Record<string, string> = {
   github: "GitHub",
   x: "X / Twitter",
@@ -57,6 +72,34 @@ const SOCIAL_LABEL: Record<string, string> = {
             <li style="display: flex; gap: 1rem; margin: 0.4rem 0;">
               <span class="text-comment" style="flex-shrink: 0; width: 5rem; font-size: 0.8rem;">{fmtNewsDate(n.data.date)}</span>
               <span>{n.data.text}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    {teachingByRole.length > 0 && (
+      <>
+        <h2>Teaching</h2>
+        <ul style="list-style: none; padding-left: 0;">
+          {teachingByRole.map((g) => (
+            <li style="display: flex; gap: 1rem; margin: 0.4rem 0;">
+              <span class="text-comment" style="flex-shrink: 0; width: 9rem; font-size: 0.8rem;">{g.role}</span>
+              <span>{g.items.join(" · ")}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    )}
+
+    {serviceByRole.length > 0 && (
+      <>
+        <h2>Service</h2>
+        <ul style="list-style: none; padding-left: 0;">
+          {serviceByRole.map((g) => (
+            <li style="display: flex; gap: 1rem; margin: 0.3rem 0;">
+              <span class="text-comment" style="flex-shrink: 0; width: 6rem; font-size: 0.8rem;">{g.role}</span>
+              <span>{g.items.join(" · ")}</span>
             </li>
           ))}
         </ul>

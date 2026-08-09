@@ -3,9 +3,13 @@ name: "Wish (PETER) Suharitdamrong"
 title: "ML researcher"
 avatar: "https://avatars.githubusercontent.com/u/94657890?v=4"
 research_interests:
-  - "Multimodals Large Language Models (MLLMs)"
+  - "Multimodal Large Language Models (MLLMs)"
   - "Representation Learning"
   
+service:
+  - { role: "Reviewer", venue: "AAAI 2026" }
+  - { role: "Reviewer", venue: "EMNLP 2026" }
+
 cv: "/cv/cv.pdf"
 social:
   - { platform: "github",   handle: "@peterwisu",   url: "https://github.com/peterwisu" }
@@ -17,4 +21,6 @@ contact:
 ---
 Hi, I am **Wish (Peter) Suharitdamrong**.
 
-I'm a PhD student at the Surrey Institute for People Centred AI (PAI), University of Surrey, where my research focuses on multimodal foundation models under the supervision of  [Dr. Sara Atito](https://www.surrey.ac.uk/people/sara-atito) and [Dr. Muhammad Awais](https://www.surrey.ac.uk/people/muhammad-awais). I previously completed an MSc in Artificial Intelligence at Surrey, also supervised by [Dr. Muhammad Awais](https://www.surrey.ac.uk/people/muhammad-awais), and a BSc in Computer Science at Surrey, supervised by [Prof. Zhenhua Feng](https://www.surrey.ac.uk/people/zhenhua-feng). I'm interested in multimodal large language models (MLLMs), multimodal alignment, parameter efficient fine tuning (PEFT), and representation learning.  I've been working on multimodal problems (Vision, Language and Audio) since the start of my deep learning journey. My undergrad dissertation focused on audio-visual talking face generation, and my master's dissertation explored parameter efficient finetuning of vision-language foundation models for multi-task visual grounding.
+I'm a PhD student at the Surrey Institute for People-Centred AI (PAI), University of Surrey, supervised by [Dr. Sara Atito](https://www.surrey.ac.uk/people/sara-atito) and [Dr. Muhammad Awais](https://www.surrey.ac.uk/people/muhammad-awais). My research focuses on multimodal foundation models across vision, audio, and language, particularly multimodal large language models and multimodal representation learning. I previously completed an MSc in Artificial Intelligence at Surrey, also supervised by [Dr. Muhammad Awais](https://www.surrey.ac.uk/people/muhammad-awais), and a BSc in Computer Science at Surrey, supervised by [Prof. Zhenhua Feng](https://www.surrey.ac.uk/people/zhenhua-feng).
+
+I've been working on multimodal problems since the start of my deep learning journey: my undergraduate dissertation focused on audio-visual talking face generation, and my master's dissertation explored parameter-efficient fine-tuning of vision-language foundation models for multi-task visual grounding.

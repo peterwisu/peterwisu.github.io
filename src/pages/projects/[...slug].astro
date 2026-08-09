@@ -1,0 +1,200 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { SITE_CONFIG } from "../../config";
+
+export async function getStaticPaths() {
+  // Mirror the index: with the section switched off, no detail pages are built.
+  if (!SITE_CONFIG.showProjects) return [];
+  const projects = await getCollection("projects", ({ data }) => !data.draft);
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const p = project.data;
+
+// Shorthand fields, ordered the way academic project pages conventionally
+// list them. Anything not set is skipped.
+const shorthands: [string | undefined, string][] = [
+  [p.paper, "paper"],
+  [p.venue_site, "venue site"],
+  [p.arxiv, "arXiv"],
+  [p.openreview, "OpenReview"],
+  [p.repo, "code"],
+  [p.model, "model"],
+  [p.url, "demo"],
+  [p.video, "video"],
+  [p.poster, "poster"],
+  [p.slides, "slides"],
+];
+const links = [
+  ...shorthands
+    .filter(([href]) => href)
+    .map(([href, label]) => ({ href: href as string, label })),
+  ...p.links,
+];
+
+// `bibtex:` is just the one-entry form of `citations:`.
+const citations = [
+  ...(p.bibtex ? [{ label: "", bibtex: p.bibtex }] : []),
+  ...p.citations,
+];
+
+const hasEqual = p.authors.some((a) => a.equal);
+
+// Affiliations accept a bare string or {name, logo?, url?} — normalise both.
+const affiliations = p.affiliations.map((a) =>
+  typeof a === "string"
+    ? { name: a, logo: undefined, url: undefined, invert: false, logo_height: undefined }
+    : a
+);
+const affLogos = affiliations.filter((a) => a.logo);
+---
+
+<BaseLayout title={p.title}>
+  <article class="prose">
+    <div class="paper-head">
+      <div class="paper-head-main">
+        {p.venue && <div class="venue-tag">{p.venue}</div>}
+
+        <h1 style="margin: 0.9rem 0 0;">
+          {p.icon && <span class="title-icon">{p.icon}</span>}{p.title}
+        </h1>
+      </div>
+
+      {p.logo && (
+        <img class="paper-logo" src={p.logo} alt={p.title} width="128" height="128" />
+      )}
+    </div>
+
+    {p.authors.length > 0 && (
+      <div class="author-list">
+        {p.authors.map((a, i) => (
+          <>
+            {a.url ? (
+              <a href={a.url} target="_blank" rel="noopener noreferrer">{a.name}</a>
+            ) : (
+              <span>{a.name}</span>
+            )}
+            {(a.affiliation || a.equal) && (
+              <sup>{a.affiliation}{a.equal && "*"}</sup>
+            )}
+            {i < p.authors.length - 1 && <span>, </span>}
+          </>
+        ))}
+      </div>
+    )}
+
+    {(affiliations.length > 0 || hasEqual) && (
+      <div class="affil-list">
+        {affiliations.map((aff, i) => (
+          <div>
+            <sup>{i + 1}</sup>
+            {aff.url ? (
+              <a href={aff.url} target="_blank" rel="noopener noreferrer">{aff.name}</a>
+            ) : (
+              aff.name
+            )}
+          </div>
+        ))}
+        {hasEqual && <div><sup>*</sup>{p.equal_note}</div>}
+      </div>
+    )}
+
+    {affLogos.length > 0 && (
+      <div class="affil-logos">
+        {affLogos.map((aff) =>
+          aff.url ? (
+            <a href={aff.url} target="_blank" rel="noopener noreferrer">
+              <img
+                class:list={["affil-logo", { invert: aff.invert }]}
+                src={aff.logo}
+                alt={aff.name}
+                loading="lazy"
+                style={aff.logo_height ? `height: ${aff.logo_height}px;` : undefined}
+              />
+            </a>
+          ) : (
+            <img class="affil-logo" src={aff.logo} alt={aff.name} loading="lazy" />
+          )
+        )}
+      </div>
+    )}
+
+    {links.length > 0 && (
+      <div class="link-row">
+        {links.map((l) => (
+          <a
+            href={l.href}
+            class="link-chip"
+            target={l.href.startsWith("/") ? undefined : "_blank"}
+            rel="noopener noreferrer"
+          >
+            {l.label}
+          </a>
+        ))}
+      </div>
+    )}
+
+    {p.tldr && (
+      <div class="tldr">
+        <div class="tldr-label">TL;DR</div>
+        {p.tldr}
+      </div>
+    )}
+
+    {p.teaser && (
+      <figure style="margin: 2.25rem 0 0;">
+        <img src={p.teaser} alt={p.teaser_caption ?? p.title} loading="lazy" />
+        {p.teaser_caption && <figcaption>{p.teaser_caption}</figcaption>}
+      </figure>
+    )}
+
+    <div style="margin-top: 2.25rem;">
+      <Content />
+    </div>
+
+    {citations.length > 0 && (
+      <section>
+        <h2>BibTeX</h2>
+        {citations.map((c) => (
+          <div class="bibtex-block">
+            {c.label && <div class="bibtex-label">{c.label}</div>}
+            <div class="bibtex-pre-wrap">
+              <button type="button" class="bibtex-copy" data-bibtex-copy>copy</button>
+              <pre><code>{c.bibtex.trim()}</code></pre>
+            </div>
+          </div>
+        ))}
+      </section>
+    )}
+
+    <p style="margin-top: 3.5rem;">
+      <a href="/projects">← Back to projects</a>
+    </p>
+  </article>
+</BaseLayout>
+
+<script>
+  // Rebound on every navigation — View Transitions swap the body out.
+  function initBibtexCopy() {
+    document.querySelectorAll("[data-bibtex-copy]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const text = btn.parentElement?.querySelector("code")?.textContent ?? "";
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = "copied";
+        } catch {
+          // Clipboard API needs a secure context; fall back to a hint.
+          btn.textContent = "select + copy";
+        }
+        setTimeout(() => { btn.textContent = "copy"; }, 1500);
+      });
+    });
+  }
+  document.addEventListener("astro:page-load", initBibtexCopy);
+</script>

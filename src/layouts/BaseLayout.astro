@@ -44,11 +44,9 @@ const isActive = (href: string) => path === href || path.startsWith(href + "/");
     </script>
   </head>
   <body class="bg-bg text-fg">
-    <div class="md:flex md:min-h-screen">
+    <div class="shell">
       <!-- Sidebar -->
-      <aside
-        class="md:fixed md:top-0 md:left-0 md:h-screen md:w-[240px] md:flex md:flex-col px-6 py-8 md:py-10"
-      >
+      <aside class="shell-sidebar">
         <div class="md:flex-1">
           <a href="/" class="block no-underline">
             <div class="text-sm font-semibold tracking-tight text-fg leading-tight" style="text-transform: uppercase; letter-spacing: 0.04em;">
@@ -82,7 +80,7 @@ const isActive = (href: string) => path === href || path.startsWith(href + "/");
       </aside>
 
       <!-- Content -->
-      <main class="flex-1 md:ml-[240px] px-6 py-10 md:px-16 md:py-16">
+      <main class="shell-content">
         <slot />
       </main>
     </div>

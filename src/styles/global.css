@@ -3,6 +3,9 @@
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
 
+/* KaTeX, bundled from node_modules — no CDN, fonts ship with the build. */
+@import "katex/dist/katex.min.css";
+
 /* Token names are kept (bg, fg, border, blue, …) so existing utility classes
  * keep resolving — they're just remapped to a minimal monochrome palette. */
 @theme inline {
@@ -99,6 +102,49 @@ a,
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
+  }
+}
+
+/* ---- Page shell ----
+ * Mobile: sidebar stacks above the content.
+ * Desktop: a centred, max-width row. The sidebar is `sticky` rather than
+ * `fixed` so it stays put while scrolling but still participates in the
+ * centring — `fixed` would pin it to the viewport's left edge. */
+.shell {
+  --sidebar-w: 260px;
+  --shell-max: 1280px;
+}
+.shell-sidebar {
+  padding: 2rem 1.5rem;
+}
+.shell-content {
+  padding: 2.5rem 1.5rem;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .shell {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    max-width: var(--shell-max);
+    margin: 0 auto;
+    min-height: 100vh;
+  }
+  .shell-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    padding: 2.5rem 1.5rem 2.5rem 2rem;
+  }
+  .shell-content {
+    flex: 1;
+    padding: 4rem 2rem 4rem 0;
   }
 }
 
@@ -220,6 +266,279 @@ a,
 .prose ul[style*="list-style: none"] {
   list-style: none;
 }
+.prose ol {
+  list-style: decimal;
+  margin: 0 0 1rem;
+  padding-left: 1.35rem;
+}
 .prose li {
   margin: 0.25rem 0;
+}
+
+/* ---- Long-form markdown (project writeups, blog posts) ---- */
+.prose h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.4rem;
+}
+
+.prose img,
+.prose video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.75rem 0;
+}
+
+.prose figure {
+  margin: 1.75rem 0;
+}
+.prose figure img,
+.prose figure video {
+  margin: 0;
+}
+.prose figcaption {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--tn-comment);
+  margin-top: 0.6rem;
+}
+
+.prose pre {
+  background: var(--tn-bg-dark);
+  border: 1px solid var(--tn-border);
+  border-radius: 4px;
+  padding: 0.9rem 1rem;
+  margin: 1.35rem 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+/* Inside a block, the inline-code chrome would double up */
+.prose pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.prose blockquote {
+  margin: 1.35rem 0;
+  padding-left: 1rem;
+  border-left: 2px solid var(--tn-border);
+  color: var(--tn-fg-dark);
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--tn-border);
+  margin: 2.5rem 0;
+}
+
+/* `display: block` so a wide table scrolls itself instead of the page */
+.prose table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin: 1.35rem 0;
+}
+.prose th,
+.prose td {
+  border-bottom: 1px solid var(--tn-border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+}
+.prose th {
+  font-weight: 600;
+  color: var(--tn-fg-dark);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---- Math (KaTeX) ---- */
+/* A wide equation scrolls inside itself rather than pushing the page sideways */
+.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.4rem 0;
+  margin: 1.5rem 0;
+}
+/* Leave KaTeX's own 1.21em alone — it's what its script positioning is
+ * calibrated against, and shrinking it crams sub/superscripts together. */
+
+/* ---- Paper project page header ---- */
+.paper-head {
+  display: flex;
+  /* Centred against the venue + title block, so the logo sits at title level
+   * rather than riding up alongside the venue pill. */
+  align-items: center;
+  gap: 1.75rem;
+}
+.paper-head-main {
+  flex: 1;
+  min-width: 0;
+}
+/* `img.paper-logo` outranks `.prose img`, which would otherwise force margins */
+img.paper-logo {
+  flex-shrink: 0;
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  img.paper-logo {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+.title-icon {
+  margin-right: 0.4rem;
+}
+
+.venue-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tn-fg-dark);
+  border: 1px solid var(--tn-border);
+  border-radius: 999px;
+  padding: 0.22rem 0.7rem;
+}
+
+.author-list {
+  font-size: 0.92rem;
+  line-height: 1.8;
+  margin-top: 1rem;
+}
+.author-list sup {
+  font-size: 0.62em;
+  color: var(--tn-comment);
+  margin-left: 0.05em;
+}
+
+.affil-list {
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--tn-comment);
+  margin-top: 0.6rem;
+}
+.affil-list sup {
+  margin-right: 0.25em;
+}
+
+.affil-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1.1rem;
+}
+/* `img.affil-logo` outranks `.prose img`, which would otherwise force margins */
+img.affil-logo {
+  height: 52px;
+  width: auto;
+  margin: 0;
+  object-fit: contain;
+}
+/* Coloured logos are dark-on-transparent, so they vanish on the dark
+ * background — give them a white plate there. */
+:root.dark img.affil-logo:not(.invert) {
+  background: #ffffff;
+  border-radius: 3px;
+  padding: 0.35rem 0.5rem;
+}
+
+/* `invert: true` marks a white/reversed monochrome logo: flip it to black for
+ * the light theme, leave it white on dark. No plate needed either way. */
+img.affil-logo.invert {
+  filter: invert(1);
+}
+:root.dark img.affil-logo.invert {
+  filter: none;
+}
+
+.tldr {
+  border-left: 2px solid var(--tn-fg);
+  padding-left: 1.1rem;
+  margin: 2.25rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.tldr-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tn-fg-dark);
+  margin-bottom: 0.4rem;
+}
+
+/* ---- BibTeX ---- */
+.bibtex-block {
+  margin: 0 0 1.5rem;
+}
+.bibtex-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tn-comment);
+  margin-bottom: 0.4rem;
+}
+.bibtex-pre-wrap {
+  position: relative;
+}
+/* Keep long entries from running under the button */
+.bibtex-pre-wrap pre {
+  padding-right: 5rem;
+  margin: 0;
+}
+.bibtex-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
+  font-family: inherit;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tn-fg-dark);
+  background: var(--tn-bg);
+  border: 1px solid var(--tn-border);
+  border-radius: 3px;
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+}
+.bibtex-copy:hover {
+  color: var(--tn-fg);
+  border-color: var(--tn-fg-dark);
+}
+
+/* ---- Link chips (project pages) ---- */
+.link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+/* `a.link-chip` matches `.prose a`'s specificity and wins by coming later */
+a.link-chip {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--tn-fg-dark);
+  border: 1px solid var(--tn-border);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+}
+a.link-chip:hover {
+  color: var(--tn-fg);
+  border-color: var(--tn-fg-dark);
 }

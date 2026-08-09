@@ -5,5 +5,5 @@
 export const SITE_CONFIG = {
   showGames: false,
   showBlog: false,
-  showProjects: false,
+  showProjects: true,
 };

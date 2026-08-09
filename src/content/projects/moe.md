@@ -4,4 +4,5 @@ description: "Experiments with mixture-of-experts routing. Notebook walkthroughs
 tech: ["python", "pytorch"]
 repo: "#"
 date: 2026-02-01
+draft: true
 ---

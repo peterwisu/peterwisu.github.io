@@ -20,6 +20,18 @@ function isMe(name: string) {
   return /suharitdamrong/i.test(name);
 }
 
+// Authors are either bare strings or {name, equal} — normalise to one shape.
+type Author = { name: string; equal: boolean };
+function authorsOf(
+  list: (string | { name: string; equal?: boolean })[]
+): Author[] {
+  return list.map((a) =>
+    typeof a === "string"
+      ? { name: a, equal: false }
+      : { name: a.name, equal: a.equal ?? false }
+  );
+}
+
 interface Link { label: string; href: string }
 function buildLinks(data: {
   pdf?: string; code?: string; arxiv?: string; bibtex?: string; project?: string;
@@ -38,26 +50,38 @@ function buildLinks(data: {
   <article class="prose">
     <h1>Research</h1>
 
+    {years.length > 0 && (
+      <h2>Publications</h2>
+    )}
+
     {years.length > 0 && years.map((y) => (
       <section>
-        <h2>{y}</h2>
+        <h3 class="text-comment" style="font-size: 0.8rem; font-weight: 500; letter-spacing: 0.08em; margin: 1.75rem 0 0.75rem;">{y}</h3>
         <ul style="list-style: none; padding-left: 0;">
           {groups[y].map((p) => (
             <li style="margin-bottom: 1.6rem;">
               <div style="font-weight: 600; line-height: 1.4;">{p.data.title}</div>
               <div class="text-fg-dark" style="font-size: 0.85rem; margin-top: 0.25rem;">
-                {p.data.authors.map((name, i) => (
+                {authorsOf(p.data.authors).map((a, i) => (
                   <>
-                    {isMe(name) ? <strong>{name}</strong> : <span>{name}</span>}
+                    {isMe(a.name) ? <strong>{a.name}</strong> : <span>{a.name}</span>}
+                    {a.equal && <sup>*</sup>}
                     {i < p.data.authors.length - 1 && <span>, </span>}
                   </>
                 ))}
               </div>
               <div class="text-comment" style="font-size: 0.8rem; font-style: italic; margin-top: 0.2rem;">{p.data.venue}, {p.data.year}</div>
+              {authorsOf(p.data.authors).some((a) => a.equal) && (
+                <div class="text-comment" style="font-size: 0.72rem; margin-top: 0.15rem;"><sup>*</sup>Equal contribution</div>
+              )}
               {buildLinks(p.data).length > 0 && (
                 <div style="margin-top: 0.4rem; display: flex; gap: 0.9rem; font-size: 0.78rem;">
                   {buildLinks(p.data).map((l) => (
-                    <a href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>
+                    <a
+                      href={l.href}
+                      target={l.href.startsWith("/") ? undefined : "_blank"}
+                      rel="noopener noreferrer"
+                    >{l.label}</a>
                   ))}
                 </div>
               )}
@@ -75,18 +99,26 @@ function buildLinks(data: {
             <li style="margin-bottom: 1.6rem;">
               <div style="font-weight: 600; line-height: 1.4;">{p.data.title}</div>
               <div class="text-fg-dark" style="font-size: 0.85rem; margin-top: 0.25rem;">
-                {p.data.authors.map((name, i) => (
+                {authorsOf(p.data.authors).map((a, i) => (
                   <>
-                    {isMe(name) ? <strong>{name}</strong> : <span>{name}</span>}
+                    {isMe(a.name) ? <strong>{a.name}</strong> : <span>{a.name}</span>}
+                    {a.equal && <sup>*</sup>}
                     {i < p.data.authors.length - 1 && <span>, </span>}
                   </>
                 ))}
               </div>
               <div class="text-comment" style="font-size: 0.8rem; font-style: italic; margin-top: 0.2rem;">{p.data.venue}</div>
+              {authorsOf(p.data.authors).some((a) => a.equal) && (
+                <div class="text-comment" style="font-size: 0.72rem; margin-top: 0.15rem;"><sup>*</sup>Equal contribution</div>
+              )}
               {buildLinks(p.data).length > 0 && (
                 <div style="margin-top: 0.4rem; display: flex; gap: 0.9rem; font-size: 0.78rem;">
                   {buildLinks(p.data).map((l) => (
-                    <a href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>
+                    <a
+                      href={l.href}
+                      target={l.href.startsWith("/") ? undefined : "_blank"}
+                      rel="noopener noreferrer"
+                    >{l.label}</a>
                   ))}
                 </div>
               )}

@@ -23,13 +23,8 @@ const projects = SITE_CONFIG.showProjects
     ) : (
       <ul style="list-style: none; padding-left: 0;">
         {projects.map((p) => (
-          <li style="margin-bottom: 1.6rem;">
-            <a
-              href={p.data.repo ?? p.data.url ?? "#"}
-              target={(p.data.repo ?? p.data.url) ? "_blank" : undefined}
-              rel="noopener noreferrer"
-              style="font-weight: 600;"
-            >
+          <li style="margin-bottom: 1.8rem;">
+            <a href={`/projects/${p.id}`} style="font-weight: 600;">
               {p.data.title}
             </a>
             <div class="text-fg-dark" style="font-size: 0.85rem; margin-top: 0.3rem;">{p.data.description}</div>

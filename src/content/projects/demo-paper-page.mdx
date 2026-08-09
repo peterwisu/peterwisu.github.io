@@ -1,0 +1,92 @@
+---
+# DEMO PAGE — delete this file, or set `draft: true`, once you've seen it.
+# It exists to show the full paper-page layout with every field populated.
+# Note the .mdx extension: that's what enables the interactive widget below.
+title: "Demo: paper project page"
+description: "Every field filled in, plus an interactive widget. Delete when you've seen it."
+tldr: "The TL;DR block sits above the teaser — one or two sentences a reader can take away without opening the paper."
+venue: "ICLR 2026"
+authors:
+  - { name: "Suharitdamrong, W.", url: "https://peterwisu.github.io", affiliation: "1", equal: true }
+  - { name: "Alex, T.", affiliation: "1", equal: true }
+  - { name: "Atito, S.", affiliation: "1" }
+  - { name: "Awais, M.", affiliation: "1,2" }
+affiliations:
+  - "Surrey Institute for People-Centred AI, University of Surrey"
+  - "Second affiliation, if any"
+equal_note: "Equal contribution"
+paper: "#"
+arxiv: "#"
+openreview: "#"
+repo: "#"
+model: "#"
+# url: "#"        # → "demo" chip
+# video: "#"
+# poster: "#"
+# slides: "#"
+links:
+  - { label: "data", href: "#" }
+teaser: "/projects/demo/layer-16.svg"
+teaser_caption: "Teaser figure. Put real assets in public/projects/<name>/ and reference them from the site root."
+citations:
+  - label: "ICLR 2026"
+    bibtex: |
+      @inproceedings{suharitdamrong2026demo,
+        title     = {Demo: paper project page},
+        author    = {Suharitdamrong, Wish and Alex, T. and Atito, Sara and Awais, Muhammad},
+        booktitle = {International Conference on Learning Representations (ICLR)},
+        year      = {2026}
+      }
+  - label: "arXiv"
+    bibtex: |
+      @article{suharitdamrong2026demoarxiv,
+        title   = {Demo: paper project page},
+        author  = {Suharitdamrong, Wish and Alex, T. and Atito, Sara and Awais, Muhammad},
+        journal = {arXiv preprint arXiv:2600.00000},
+        year    = {2026}
+      }
+date: 2026-06-01
+draft: true
+---
+
+import FigureSlider from "../../components/FigureSlider.tsx";
+
+## Abstract
+
+Everything from here down is ordinary markdown. Write the abstract, then break
+the rest into `##` sections — method, results, ablations, whatever the paper
+needs.
+
+## Interactive widget
+
+Because this file is `.mdx`, React components can be dropped inline. The
+`client:visible` directive is what makes it interactive: Astro ships the
+component's JavaScript only when the reader scrolls it into view, so the rest
+of the page stays static HTML.
+
+<FigureSlider
+  client:visible
+  name="Layer"
+  frames={[
+    { src: "/projects/demo/layer-01.svg", label: "1",  caption: "Early layers attend locally." },
+    { src: "/projects/demo/layer-16.svg", label: "16", caption: "Mid layers spread across modalities." },
+    { src: "/projects/demo/layer-32.svg", label: "32", caption: "Late layers concentrate on the answer span." }
+  ]}
+/>
+
+The component lives in [src/components/FigureSlider.tsx](https://github.com/peterwisu)
+— copy it as the starting point for any other widget.
+
+## Results
+
+| model | acc |
+| ----- | --- |
+| ours  | 1.0 |
+| base  | 0.8 |
+
+Static figures still work the normal way:
+
+<figure>
+  <img src="/projects/demo/layer-32.svg" alt="Example figure" />
+  <figcaption>A caption, rendered small and grey.</figcaption>
+</figure>
