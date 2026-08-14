@@ -6,7 +6,7 @@ description: "A study of how different vision integration paradigms behave in VL
 venue: "arXiv preprint, 2026"
 authors:
   - { name: "Wish Suharitdamrong", url: "https://peterwisu.github.io", affiliation: "1" }
-  - { name: "Tony Alex", affiliation: "1,2" }
+  - { name: "Tony Alex", url: "https://www.linkedin.com/in/tony-alex-203b5a114/", affiliation: "1,2" }
   - { name: "Xiatian Zhu", url: "https://www.surrey.ac.uk/people/xiatian-zhu", affiliation: "1,2" }
   - { name: "Muhammad Awais", url: "https://www.surrey.ac.uk/people/muhammad-awais", affiliation: "1,2" }
   - { name: "Sara Atito", url: "https://www.surrey.ac.uk/people/sara-atito", affiliation: "1,2" }

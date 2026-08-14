@@ -7,7 +7,7 @@ tldr: "In a dual encoder model, LoRA adapts each modality encoder in isolation, 
 venue: "ICML 2026"
 authors:
   - { name: "Wish Suharitdamrong", url: "https://peterwisu.github.io", affiliation: "1" }
-  - { name: "Tony Alex", affiliation: "1,2" }
+  - { name: "Tony Alex", url: "https://www.linkedin.com/in/tony-alex-203b5a114/", affiliation: "1,2" }
   - { name: "Muhammad Awais", url: "https://www.surrey.ac.uk/people/muhammad-awais", affiliation: "1,2" }
   - { name: "Sara Atito", url: "https://www.surrey.ac.uk/people/sara-atito", affiliation: "1,2" }
 affiliations:
