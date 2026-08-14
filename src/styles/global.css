@@ -204,6 +204,9 @@ a,
 /* ---- Minimal prose ---- */
 .prose {
   max-width: 680px;
+  /* Centred in the content column so wide figures sit on the same axis as the
+   * text rather than the whole page reading as left-anchored. */
+  margin-inline: auto;
   font-size: 0.95rem;
   line-height: 1.75;
   color: var(--tn-fg);
@@ -293,6 +296,55 @@ a,
 .prose figure {
   margin: 1.75rem 0;
 }
+
+/* `<figure class="wide">` breaks out of the 680px reading column and uses the
+ * full content area. For dense multi-panel figures that are illegible at
+ * reading width. Capped at the content column so it never overflows the shell. */
+@media (min-width: 768px) {
+  .prose figure.wide {
+    width: min(956px, calc(100vw - var(--sidebar-w, 260px) - 6rem));
+    /* Centre on the text column's axis. `margin: auto` can't do this because
+     * the figure is wider than its container, so it would overflow right. */
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* `<div class="split">` puts a figure and its text side by side, for square-ish
+ * figures that waste horizontal space when stacked. Same centred break-out as
+ * `.wide`, so the pair lines up with the full-width figures above and below. */
+.prose .split {
+  margin: 2rem 0;
+}
+.prose .split > figure {
+  margin: 0;
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .prose .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+  }
+  /* The text half shouldn't inherit the paragraph's bottom margin at the end */
+  .prose .split > div > :last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* The opposite case: a tall or near-square figure that would dominate the page
+ * at full reading width. Percentages of the 680px column, so it still shrinks
+ * on mobile without a second breakpoint. */
+.prose figure.narrow {
+  max-width: 76%;
+  margin-inline: auto;
+}
+.prose figure.narrower {
+  max-width: 56%;
+  margin-inline: auto;
+}
 .prose figure img,
 .prose figure video {
   margin: 0;
@@ -357,6 +409,37 @@ a,
   font-size: 0.75rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+/* ---- Numbered citations ---- */
+/* `a.cite` outranks `.prose a`, which would otherwise underline it */
+a.cite {
+  text-decoration: none;
+  font-size: 0.78em;
+  vertical-align: super;
+  line-height: 0;
+  color: var(--tn-fg-dark);
+  white-space: nowrap;
+}
+a.cite:hover {
+  color: var(--tn-fg);
+}
+
+.prose ol.references {
+  list-style: decimal;
+  padding-left: 1.6rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.prose ol.references li {
+  margin: 0 0 0.7rem;
+}
+/* Land the anchor clear of the top of the viewport when a [n] is clicked */
+.prose ol.references li:target {
+  scroll-margin-top: 2rem;
+}
+.prose ol.references li:target::marker {
+  font-weight: 700;
 }
 
 /* ---- Math (KaTeX) ---- */

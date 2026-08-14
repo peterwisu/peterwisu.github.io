@@ -173,6 +173,25 @@ const affLogos = affiliations.filter((a) => a.logo);
       </section>
     )}
 
+    {p.references.length > 0 && (
+      <section>
+        <h2>References</h2>
+        <ol class="references">
+          {p.references.map((r, i) => (
+            <li id={`ref-${i + 1}`}>
+              <span set:html={r.text} />
+              {r.href && (
+                <>
+                  {" "}
+                  <a href={r.href} target="_blank" rel="noopener noreferrer">{r.href.replace(/^https?:\/\/(www\.)?/, "")}</a>
+                </>
+              )}
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+
     <p style="margin-top: 3.5rem;">
       <a href="/projects">← Back to projects</a>
     </p>

@@ -136,6 +136,12 @@ const projects = defineCollection({
     citations: z
       .array(z.object({ label: z.string().default(""), bibtex: z.string() }))
       .default([]),
+    // Numbered reference list, rendered below BibTeX. Cite from the body with
+    // <a href="#ref-1" class="cite">[1]</a>; order here sets the numbering.
+    // `text` may contain inline HTML such as <em>.
+    references: z
+      .array(z.object({ text: z.string(), href: z.string().optional() }))
+      .default([]),
 
     date: z.coerce.date().optional(),
     draft: z.boolean().default(false),

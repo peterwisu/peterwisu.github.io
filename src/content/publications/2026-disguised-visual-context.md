@@ -11,4 +11,5 @@ year: 2026
 preprint: true
 draft: false
 arxiv: "https://arxiv.org/abs/2606.20077"
+project: "/projects/hidden-evolution"
 ---
