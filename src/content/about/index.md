@@ -7,6 +7,7 @@ research_interests:
   - "Representation Learning"
   
 service:
+  - { role: "Reviewer", venue: "AAAI 2025" }
   - { role: "Reviewer", venue: "AAAI 2026" }
   - { role: "Reviewer", venue: "EMNLP 2026" }
 
