@@ -157,7 +157,7 @@ representation each layer has to work with.
 <div class="split">
 <figure>
   <img src="/projects/hidden-evolution/fig7-hybrid.png" alt="Radar plots comparing the hybrid integration against the individual integration styles." />
-  <figcaption>TODO: caption for the hybrid comparison.</figcaption>
+  <figcaption>The hybrid, interleaving layer-wise attention injection with in-context tokens, compared against each individual paradigm across the same benchmarks.</figcaption>
 </figure>
 
 <div>
