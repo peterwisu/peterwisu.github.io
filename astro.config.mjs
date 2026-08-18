@@ -12,6 +12,11 @@ export default defineConfig({
   site: 'https://peterwisu.github.io',
   integrations: [react(), mdx()],
 
+  // The About page is now the home page; keep old links working.
+  redirects: {
+    '/about': '/',
+  },
+
   // LaTeX in markdown: remark-math parses $…$ / $$…$$, rehype-katex renders it.
   // MDX inherits this config automatically.
   markdown: {

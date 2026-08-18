@@ -3,7 +3,7 @@ title: "The Hidden Evolution of Disguised Visual Context inside the VLM"
 icon: "👀"
 # logo: "/projects/hidden-evolution/logo.png"
 description: "A study of how different vision integration paradigms behave in VLMs, and how each one transforms the visual representation inside the LLM."
-venue: "arXiv preprint, 2026"
+venue: "arXiv preprint (under review), 2026"
 authors:
   - { name: "Wish Suharitdamrong", url: "https://peterwisu.github.io", affiliation: "1" }
   - { name: "Tony Alex", url: "https://www.linkedin.com/in/tony-alex-203b5a114/", affiliation: "1,2" }
