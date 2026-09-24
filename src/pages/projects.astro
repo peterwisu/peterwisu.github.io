@@ -25,6 +25,7 @@ const projects = SITE_CONFIG.showProjects
         {projects.map((p) => (
           <li style="margin-bottom: 1.8rem;">
             <a href={`/projects/${p.id}`} style="font-weight: 600;">
+              {p.data.icon && <span style="margin-right: 0.35rem;">{p.data.icon}</span>}
               {p.data.title}
             </a>
             <div class="text-fg-dark" style="font-size: 0.85rem; margin-top: 0.3rem;">{p.data.description}</div>

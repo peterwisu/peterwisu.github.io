@@ -60,7 +60,10 @@ function buildLinks(data: {
         <ul style="list-style: none; padding-left: 0;">
           {groups[y].map((p) => (
             <li style="margin-bottom: 1.6rem;">
-              <div style="font-weight: 600; line-height: 1.4;">{p.data.title}</div>
+              <div style="font-weight: 600; line-height: 1.4;">
+                {p.data.icon && <span style="margin-right: 0.35rem;">{p.data.icon}</span>}
+                {p.data.title}
+              </div>
               <div class="text-fg-dark" style="font-size: 0.85rem; margin-top: 0.25rem;">
                 {authorsOf(p.data.authors).map((a, i) => (
                   <>
@@ -97,7 +100,10 @@ function buildLinks(data: {
         <ul style="list-style: none; padding-left: 0;">
           {preprints.map((p) => (
             <li style="margin-bottom: 1.6rem;">
-              <div style="font-weight: 600; line-height: 1.4;">{p.data.title}</div>
+              <div style="font-weight: 600; line-height: 1.4;">
+                {p.data.icon && <span style="margin-right: 0.35rem;">{p.data.icon}</span>}
+                {p.data.title}
+              </div>
               <div class="text-fg-dark" style="font-size: 0.85rem; margin-top: 0.25rem;">
                 {authorsOf(p.data.authors).map((a, i) => (
                   <>

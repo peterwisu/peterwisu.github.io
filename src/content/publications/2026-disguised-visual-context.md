@@ -1,5 +1,6 @@
 ---
 title: "The Hidden Evolution of Disguised Visual Context inside the VLM"
+icon: "👀"
 authors:
   - "Suharitdamrong, W."
   - "Alex, T."

@@ -42,6 +42,8 @@ const publications = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/publications" }),
   schema: z.object({
     title: z.string(),
+    // Emoji shown before the title, matching the project page's icon.
+    icon: z.string().optional(),
     // A plain string, or {name, equal: true} to mark equal contribution.
     authors: z.array(
       z.union([

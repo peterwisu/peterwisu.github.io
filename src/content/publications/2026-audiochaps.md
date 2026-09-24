@@ -1,5 +1,6 @@
 ---
 title: "Listen, Reason, and Segment: Aligning LALMs with Editorial Judgment for Media Chapterization"
+icon: "🎬"
 authors:
   - "Alex, T."
   - "Suharitdamrong, W."
