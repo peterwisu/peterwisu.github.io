@@ -3,7 +3,7 @@ import { getEntry } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 
 const aboutEntry = await getEntry("about", "index");
-const cvHref = aboutEntry?.data.cv ?? "/cv/cv.pdf";
+const cvHref = aboutEntry?.data.cv ?? "/cv/wish_suharitdamrong_cv.pdf";
 
 const PDFJS_VERSION = "4.7.76";
 const PDFJS_BASE = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build`;

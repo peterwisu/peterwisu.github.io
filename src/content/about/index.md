@@ -12,7 +12,7 @@ service:
   - { role: "Reviewer", venue: "EMNLP 2026" }
   - { role: "Reviewer", venue: "EACL 2026" }
 
-cv: "/cv/cv.pdf"
+cv: "/cv/wish_suharitdamrong_cv.pdf"
 social:
   - { platform: "github",   handle: "@peterwisu",   url: "https://github.com/peterwisu" }
   - { platform: "x",        handle: "@peterwisu",   url: "https://x.com/peterwisu" }
