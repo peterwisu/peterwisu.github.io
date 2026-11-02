@@ -18,8 +18,8 @@ affiliations:
     invert: true
     logo_height: 34
 paper: "https://arxiv.org/abs/2606.10147"
-# venue_site: ""
-# repo: ""
+venue_site: "https://neurips.cc/virtual/2026/loc/sydney/poster/153955"
+repo: "https://github.com/peterwisu/senses2decision"
 citations:
   - label: "NeurIPS 2026"
     bibtex: |
