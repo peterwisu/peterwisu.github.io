@@ -4,7 +4,7 @@ icon: "🥤"
 logo: "/projects/cola/logo.png"
 description: "A PEFT framework that extends LoRA with a dedicated inter-modal adaptation pathway, for adapting dual-stream unimodal encoders to multimodal tasks."
 tldr: "In a dual encoder model, LoRA adapts each modality encoder in isolation, so it never captures cross-modal interaction. CoLA adds a dedicated inter-modal path alongside the standard intra-modal one inside the adapted layers of both encoders, giving around 3% relative gain over LoRA on visual grounding and 2% on audio-visual benchmarks at the same parameter budget."
-venue: "ICML 2026"
+venue: "ICML 2026 (Main Conference)"
 authors:
   - { name: "Wish Suharitdamrong", url: "https://peterwisu.github.io", affiliation: "1" }
   - { name: "Tony Alex", url: "https://www.linkedin.com/in/tony-alex-203b5a114/", affiliation: "1,2" }

@@ -2,7 +2,7 @@
 title: "From Senses to Decisions: The Information Flow of Auditory and Visual Perception in Multimodal LLMs"
 icon: "👁️👂"
 description: "Tracing how audio and visual information is routed through audio-visual LLMs, and when those tokens stop being needed."
-venue: "NeurIPS 2026"
+venue: "NeurIPS 2026 (Main Conference)"
 authors:
   - { name: "Wish Suharitdamrong", url: "https://peterwisu.github.io", affiliation: "1" }
   - { name: "Muhammad Awais", url: "https://www.surrey.ac.uk/people/muhammad-awais", affiliation: "1,2" }

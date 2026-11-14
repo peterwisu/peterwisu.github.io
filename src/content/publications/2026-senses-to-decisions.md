@@ -6,7 +6,7 @@ authors:
   - "Awais, M."
   - "Zhu, X."
   - "Atito, S."
-venue: "NeurIPS"
+venue: "NeurIPS (Main Conference)"
 year: 2026
 preprint: false
 draft: false
